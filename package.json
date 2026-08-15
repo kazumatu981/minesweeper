@@ -1,0 +1,29 @@
+{
+    "name": "minesweeper",
+    "version": "1.0.0",
+    "description": "HTML + JavaScript Minesweeper app.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kazumatu981/minesweeper.git"
+    },
+    "keywords": [
+        "learning",
+        "javascript",
+        "html"
+    ],
+    "author": "kazumatu981@gmail.com",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/kazumatu981/minesweeper/issues"
+    },
+    "homepage": "https://github.com/kazumatu981/minesweeper#readme",
+    "devDependencies": {
+        "@eslint/js": "latest",
+        "eslint": "latest",
+        "globals": "latest"
+    }
+}
