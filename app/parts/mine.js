@@ -31,10 +31,21 @@ export const MINE_STATES = {
     [MINE_STATE_OPENED]: MINE_STATE_OPENED,
 };
 
+const MIME_EVENT_STATE_CHANGE = 'state-change';
+const MIME_EVENT_BOOM = 'boon';
+
+export const MIME_EVENTS = {
+    [MIME_EVENT_STATE_CHANGE]: MIME_EVENT_STATE_CHANGE,
+    [MIME_EVENT_BOOM]: MIME_EVENT_BOOM,
+};
+
 export class Mine extends EventHandler {
     _element;
     _rowId;
     _colId;
+    _state = MINE_STATES.closed;
+    _neighborBombCount = 0;
+    _isEstimated = false;
     _isBomb = false;
 
     constructor(rowId, colId) {
@@ -46,13 +57,20 @@ export class Mine extends EventHandler {
         this._element.id = this.id;
     }
 
+    get state() {
+        return this._state;
+    }
+    set state(value) {
+        this._state = value;
+        this.on(MIME_EVENT_STATE_CHANGE, this);
+    }
+
     /**
      * 爆弾かどうかを取得する
      */
     get isBomb() {
         return this._isBomb;
     }
-
     /**
      * 爆弾かどうかを設定する
      */
@@ -60,13 +78,64 @@ export class Mine extends EventHandler {
         this._isBomb = value;
     }
 
+    /**
+     * 評価済みかどうかを取得する
+     */
+    get isEstimated() {
+        return this._isEstimated;
+    }
+    /**
+     * 評価済みかどうかを設定する
+     */
+    set isEstimated(value) {
+        this._isEstimated = value;
+    }
+
+    /**
+     * 近隣の爆弾の数を参照する
+     */
+    get neighborCount() {
+        return this._neighborBombCount;
+    }
+    /**
+     * 近隣の爆弾の数を設定する
+     */
+    set neighborCount(value) {
+        this._neighborBombCount = value;
+    }
+
+    /**
+     * DOM要素の参照
+     */
     get element() {
         return this._element;
     }
 
+    /**
+     * idの参照
+     */
     get id() {
-        return `${MINE_ID_PREFIX}${this._rowId}-${this._colId}`;
+        return _formatId(this._rowId, this._colId);
     }
+
+    _registerEvent() {
+        this._element.addEventListener('click', () => {
+            this._onLeftClick();
+        });
+        this._element.addEventListener('contextmenu', (domElement) => {
+            domElement.preventDefault();
+            this._onRightClick();
+        });
+    }
+
+    /**
+     * 左クリックのイベントハンドラ
+     */
+    _onLeftClick() {}
+    /**
+     * 右クリックの
+     */
+    _onRightClick() {}
 }
 
 export function _formatId(rowId, colId) {
