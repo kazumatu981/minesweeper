@@ -54,7 +54,7 @@ const MINE_STATE_CLASSES = {
      * MINEが閉じている
      */
     [MINE_STATE_CLOSED]: {
-        text: 'C',
+        text: ' ',
         class: `${MINE_CLASS_PREFIX}${MINE_STATE_CLOSED}`,
     },
     /**
@@ -76,13 +76,13 @@ const MINE_STATE_CLASSES = {
      */
     [MINE_STATE_MAY_BE_BOMB]: {
         text: '?',
-        class: `${MINE_CLASS_PREFIX}${MINE_STATE_MUST_BE_BOMB}`,
+        class: `${MINE_CLASS_PREFIX}${MINE_STATE_MAY_BE_BOMB}`,
     },
     /**
      * MINEが開いている
      */
     [MINE_STATE_OPENED]: {
-        text: 'O',
+        text: ' ',
         class: `${MINE_CLASS_PREFIX}${MINE_STATE_OPENED}`,
     },
 };
@@ -137,6 +137,9 @@ export class Mine extends EventHandler {
     set state(value) {
         if (this._state !== value) {
             this._state = value;
+            if (value === MINE_STATE_ESTIMATED) {
+                this.isEstimated = true;
+            }
             this.fire(MINE_EVENT_STATE_CHANGE, this);
         }
     }
@@ -275,6 +278,7 @@ export function _formatId(rowId, colId) {
 
 const R_CLICK_STATE_MAP = {
     [MINE_STATE_CLOSED]: MINE_STATE_MUST_BE_BOMB,
+    [MINE_STATE_ESTIMATED]: MINE_STATE_MUST_BE_BOMB,
     [MINE_STATE_MUST_BE_BOMB]: MINE_STATE_MAY_BE_BOMB,
     [MINE_STATE_MAY_BE_BOMB]: MINE_STATE_CLOSED,
     [MINE_STATE_OPENED]: MINE_STATE_OPENED,

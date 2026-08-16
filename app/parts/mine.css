@@ -1,0 +1,32 @@
+.__mine_row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.__mine_base {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.25rem;
+  text-align: center;
+  line-height: 3rem;
+}
+.__mine_opened {
+  border: 1px solid #dddddd;
+}
+.__mine_estimated {
+  background-color: #dddddd;
+}
+.__mine_closed {
+  background-color: #dddddd;
+}
+.__mine_must-be {
+  color: white;
+  background-color: darkblue;
+}
+.__mine_may-be {
+  color: white;
+  background-color: darkorange;
+}

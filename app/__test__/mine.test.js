@@ -15,4 +15,13 @@ function onPageLoad() {
 
     mine0_0.state = MINE_STATES.closed;
     mine0_1.state = MINE_STATES.opened;
+
+    const testPanel2 = document.getElementById('test002');
+
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((index) => {
+        const mine = new Mine(1, index);
+        testPanel2.appendChild(mine.element);
+        mine.neighborCount = index;
+        mine.state = MINE_STATES.estimated;
+    });
 }
