@@ -12,12 +12,10 @@
   border-radius: 0.25rem;
   text-align: center;
   line-height: 3rem;
+  border: 1px solid #dddddd;
 }
 .__mine_opened {
   border: 1px solid #dddddd;
-}
-.__mine_estimated {
-  background-color: #dddddd;
 }
 .__mine_closed {
   background-color: #dddddd;
@@ -29,4 +27,8 @@
 .__mine_may-be {
   color: white;
   background-color: darkorange;
+}
+.__mine_bomb {
+  color: white;
+  background-color: red;
 }

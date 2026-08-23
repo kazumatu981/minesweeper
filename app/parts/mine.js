@@ -7,7 +7,6 @@ const MINE_ID_PREFIX = '___mine___';
 
 //#region mine states
 const MINE_STATE_CLOSED = 'closed';
-const MINE_STATE_ESTIMATED = 'estimated';
 const MINE_STATE_MUST_BE_BOMB = 'must-be';
 const MINE_STATE_MAY_BE_BOMB = 'may-be';
 const MINE_STATE_OPENED = 'opened';
@@ -17,10 +16,6 @@ export const MINE_STATES = {
      * MINEが閉じている
      */
     [MINE_STATE_CLOSED]: MINE_STATE_CLOSED,
-    /**
-     * MINEの評価済みである
-     */
-    [MINE_STATE_ESTIMATED]: MINE_STATE_ESTIMATED,
     /**
      * BOMBだと思ってフラグを付けている状態
      */
@@ -49,20 +44,13 @@ export const MINE_EVENTS = {
 //#region mine face and class
 const MINE_CLASS_PREFIX = '__mine_';
 const MINE_CLASS_BASE = '__mine_base';
-const MINE_STATE_CLASSES = {
+const MINE_STATE_FACE = {
     /**
      * MINEが閉じている
      */
     [MINE_STATE_CLOSED]: {
         text: ' ',
         class: `${MINE_CLASS_PREFIX}${MINE_STATE_CLOSED}`,
-    },
-    /**
-     * MINEの評価済みである
-     */
-    [MINE_STATE_ESTIMATED]: {
-        text: 'E',
-        class: `${MINE_CLASS_PREFIX}${MINE_STATE_ESTIMATED}`,
     },
     /**
      * BOMBだと思ってフラグを付けている状態
@@ -86,11 +74,11 @@ const MINE_STATE_CLASSES = {
         class: `${MINE_CLASS_PREFIX}${MINE_STATE_OPENED}`,
     },
 };
-const MINE_IS_BOMB_CLASS = {
+const MINE_BOMB_FACE = {
     text: 'B',
     class: `${MINE_CLASS_PREFIX}bomb`,
 };
-const MINE_NEIGHBOR_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const MINE_NEIGHBOR_FACE = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     .map((i) => {
         return {
             text: i.toString(),
@@ -103,9 +91,9 @@ const MINE_NEIGHBOR_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     }, {});
 
 const ALL_CLASSES = [
-    MINE_IS_BOMB_CLASS,
-    ...Object.values(MINE_STATE_CLASSES),
-    ...Object.values(MINE_NEIGHBOR_CLASSES),
+    MINE_BOMB_FACE,
+    ...Object.values(MINE_STATE_FACE),
+    ...Object.values(MINE_NEIGHBOR_FACE),
 ];
 //#endregion
 
@@ -115,7 +103,6 @@ export class Mine extends EventHandler {
     _colId;
     _state;
     _neighborBombCount = 0;
-    _isEstimated = false;
     _isBomb = false;
 
     constructor(rowId, colId) {
@@ -137,9 +124,6 @@ export class Mine extends EventHandler {
     set state(value) {
         if (this._state !== value) {
             this._state = value;
-            if (value === MINE_STATE_ESTIMATED) {
-                this.isEstimated = true;
-            }
             this.fire(MINE_EVENT_STATE_CHANGE, this);
         }
     }
@@ -155,19 +139,6 @@ export class Mine extends EventHandler {
      */
     set isBomb(value) {
         this._isBomb = value;
-    }
-
-    /**
-     * 評価済みかどうかを取得する
-     */
-    get isEstimated() {
-        return this._isEstimated;
-    }
-    /**
-     * 評価済みかどうかを設定する
-     */
-    set isEstimated(value) {
-        this._isEstimated = value;
     }
 
     /**
@@ -211,20 +182,14 @@ export class Mine extends EventHandler {
         this.on(MINE_EVENT_STATE_CHANGE, this._checkBomb.bind(this));
 
         // スタイル変更イベントの登録
-        this.on(MINE_EVENT_STATE_CHANGE, this._adjustFaceAndStyle.bind(this));
+        this.on(MINE_EVENT_STATE_CHANGE, this._adjustFace.bind(this));
     }
 
     /**
      * 左クリックのイベントハンドラ
      */
     _onLeftClick() {
-        if (
-            [
-                MINE_STATE_CLOSED,
-                MINE_STATE_MAY_BE_BOMB,
-                MINE_STATE_ESTIMATED,
-            ].includes(this.state)
-        ) {
+        if ([MINE_STATE_CLOSED, MINE_STATE_MAY_BE_BOMB].includes(this.state)) {
             this.state = MINE_STATE_OPENED;
         }
     }
@@ -232,11 +197,7 @@ export class Mine extends EventHandler {
      * 右クリックの
      */
     _onRightClick() {
-        let nextState = R_CLICK_STATE_MAP[this.state];
-        if (nextState === MINE_STATE_CLOSED && this.isEstimated) {
-            nextState = MINE_STATE_ESTIMATED;
-        }
-        this.state = nextState;
+        this.state = R_CLICK_STATE_MAP[this.state];
     }
 
     _checkBomb() {
@@ -247,28 +208,54 @@ export class Mine extends EventHandler {
     /**
      * テキストとスタイルの調整
      */
-    _adjustFaceAndStyle() {
+    _adjustFace() {
         // スタイルの初期化
         ALL_CLASSES.forEach((item) => {
             this._element.classList.remove(item.class);
         });
 
-        this.element.textContent = this._currentStateClass.text;
-        this.element.classList.add(this._currentStateClass.class);
-        if (this.state === MINE_STATE_OPENED) {
-            if (this.isBomb) {
-                this.element.textContent = MINE_IS_BOMB_CLASS.text;
-                this.element.classList.add(MINE_IS_BOMB_CLASS.class);
-            }
-        } else if (this.state === MINE_STATE_ESTIMATED) {
-            const currentEstimated = MINE_NEIGHBOR_CLASSES[this.neighborCount];
-            this.element.textContent = currentEstimated.text;
-            this.element.classList.add(currentEstimated.class);
-        }
+        const currentFace = this._currentFace;
+
+        this.element.textContent = currentFace.text;
+        currentFace.class.forEach((className) => {
+            this.element.classList.add(className);
+        });
     }
 
-    get _currentStateClass() {
-        return MINE_STATE_CLASSES[this.state];
+    get _currentFaceText() {
+        let text = MINE_STATE_FACE[this.state].text;
+        if (this.isBomb) {
+            text = MINE_BOMB_FACE.text;
+        } else if (this.neighborCount > 0) {
+            text = MINE_NEIGHBOR_FACE[this.neighborCount].text;
+        }
+        return text;
+    }
+    get _currentClasses() {
+        const classes = [MINE_STATE_FACE[this.state].class];
+        if (this.isBomb) {
+            classes.push(MINE_BOMB_FACE.class);
+        } else if (this.neighborCount > 0) {
+            classes.push(MINE_NEIGHBOR_FACE[this.neighborCount].class);
+        }
+        return classes;
+    }
+    get _currentFace() {
+        const currentFace = {
+            text: MINE_STATE_FACE[this.state].text,
+            class: [MINE_STATE_FACE[this.state].class],
+        };
+        if (this.state === MINE_STATE_OPENED) {
+            if (this.isBomb) {
+                currentFace.text = MINE_BOMB_FACE.text;
+                currentFace.class.push(MINE_BOMB_FACE.class);
+            } else if (this.neighborCount > 0) {
+                const neighborFace = MINE_NEIGHBOR_FACE[this.neighborCount];
+                currentFace.text = neighborFace.text;
+                currentFace.class.push(neighborFace.class);
+            }
+        }
+        return currentFace;
     }
 }
 
@@ -278,7 +265,6 @@ export function _formatId(rowId, colId) {
 
 const R_CLICK_STATE_MAP = {
     [MINE_STATE_CLOSED]: MINE_STATE_MUST_BE_BOMB,
-    [MINE_STATE_ESTIMATED]: MINE_STATE_MUST_BE_BOMB,
     [MINE_STATE_MUST_BE_BOMB]: MINE_STATE_MAY_BE_BOMB,
     [MINE_STATE_MAY_BE_BOMB]: MINE_STATE_CLOSED,
     [MINE_STATE_OPENED]: MINE_STATE_OPENED,
