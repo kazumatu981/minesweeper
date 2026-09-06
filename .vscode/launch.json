@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "サンプルプロジェクトのデバッグ",
+            "name": "コンポーネントテストのデバッグ",
             "request": "launch",
             "type": "msedge",
-            "url": "http://127.0.0.1:3000/app/__test__/mine.test.html?vscode-livepreview=true",
+            "url": "http://127.0.0.1:3000/app/__tests__/components/index.html?vscode-livepreview=true",
             "webRoot": "${workspaceFolder}"
         }
     ]

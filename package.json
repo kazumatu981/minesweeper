@@ -4,6 +4,7 @@
     "description": "HTML + JavaScript Minesweeper app.",
     "main": "index.js",
     "scripts": {
+        "test:unit": "node --test app/__tests__/unit/**/*.test.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {

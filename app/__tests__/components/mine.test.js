@@ -1,5 +1,5 @@
 /* eslint-disable max-statements */
-import { Mine, MINE_STATES, MINE_EVENTS } from '../parts/mine.js';
+import { Mine, MINE_STATES, MINE_EVENTS } from '../../parts/mine.js';
 
 // ドキュメントをすべて読み込んだら onPageLoad関数を呼び出す
 document.addEventListener('DOMContentLoaded', onPageLoad);

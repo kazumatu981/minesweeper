@@ -98,32 +98,32 @@ const ALL_CLASSES = [
 //#endregion
 
 export class Mine extends EventHandler {
-    _element;
-    _rowId;
-    _colId;
-    _state;
-    _neighborBombCount = 0;
-    _isBomb = false;
+    #element;
+    #rowId;
+    #colId;
+    #state;
+    #neighborBombCount = 0;
+    #isBomb = false;
 
     constructor(rowId, colId) {
         super();
-        this._rowId = rowId;
-        this._colId = colId;
+        this.#rowId = rowId;
+        this.#colId = colId;
 
-        this._element = document.createElement('div');
-        this._element.id = this.id;
-        this._element.classList.add(MINE_CLASS_BASE);
-        this._registerEvent();
+        this.#element = document.createElement('div');
+        this.#element.id = this.id;
+        this.#element.classList.add(MINE_CLASS_BASE);
+        this.#registerEvent();
 
         this.state = MINE_STATE_CLOSED;
     }
 
     get state() {
-        return this._state;
+        return this.#state;
     }
     set state(value) {
-        if (this._state !== value) {
-            this._state = value;
+        if (this.#state !== value) {
+            this.#state = value;
             this.fire(MINE_EVENT_STATE_CHANGE, this);
         }
     }
@@ -132,63 +132,63 @@ export class Mine extends EventHandler {
      * 爆弾かどうかを取得する
      */
     get isBomb() {
-        return this._isBomb;
+        return this.#isBomb;
     }
     /**
      * 爆弾かどうかを設定する
      */
     set isBomb(value) {
-        this._isBomb = value;
+        this.#isBomb = value;
     }
 
     /**
      * 近隣の爆弾の数を参照する
      */
     get neighborCount() {
-        return this._neighborBombCount;
+        return this.#neighborBombCount;
     }
     /**
      * 近隣の爆弾の数を設定する
      */
     set neighborCount(value) {
-        this._neighborBombCount = value;
+        this.#neighborBombCount = value;
     }
 
     /**
      * DOM要素の参照
      */
     get element() {
-        return this._element;
+        return this.#element;
     }
 
     /**
      * idの参照
      */
     get id() {
-        return _formatId(this._rowId, this._colId);
+        return _formatId(this.#rowId, this.#colId);
     }
 
-    _registerEvent() {
+    #registerEvent() {
         // DOM イベントの登録
-        this._element.addEventListener('click', () => {
-            this._onLeftClick();
+        this.#element.addEventListener('click', () => {
+            this.#onLeftClick();
         });
-        this._element.addEventListener('contextmenu', (domElement) => {
+        this.#element.addEventListener('contextmenu', (domElement) => {
             domElement.preventDefault();
-            this._onRightClick();
+            this.#onRightClick();
         });
 
         // 爆弾判定の登録
-        this.on(MINE_EVENT_STATE_CHANGE, this._checkBomb.bind(this));
+        this.on(MINE_EVENT_STATE_CHANGE, this.#checkBomb.bind(this));
 
         // スタイル変更イベントの登録
-        this.on(MINE_EVENT_STATE_CHANGE, this._adjustFace.bind(this));
+        this.on(MINE_EVENT_STATE_CHANGE, this.#adjustFace.bind(this));
     }
 
     /**
      * 左クリックのイベントハンドラ
      */
-    _onLeftClick() {
+    #onLeftClick() {
         if ([MINE_STATE_CLOSED, MINE_STATE_MAY_BE_BOMB].includes(this.state)) {
             this.state = MINE_STATE_OPENED;
         }
@@ -196,11 +196,11 @@ export class Mine extends EventHandler {
     /**
      * 右クリックの
      */
-    _onRightClick() {
+    #onRightClick() {
         this.state = R_CLICK_STATE_MAP[this.state];
     }
 
-    _checkBomb() {
+    #checkBomb() {
         if (this.state === MINE_STATE_OPENED && this.isBomb) {
             this.fire(MINE_EVENT_BOOM, this);
         }
@@ -208,13 +208,13 @@ export class Mine extends EventHandler {
     /**
      * テキストとスタイルの調整
      */
-    _adjustFace() {
+    #adjustFace() {
         // スタイルの初期化
         ALL_CLASSES.forEach((item) => {
-            this._element.classList.remove(item.class);
+            this.#element.classList.remove(item.class);
         });
 
-        const currentFace = this._currentFace;
+        const currentFace = this.#currentFace;
 
         this.element.textContent = currentFace.text;
         currentFace.class.forEach((className) => {
@@ -222,25 +222,7 @@ export class Mine extends EventHandler {
         });
     }
 
-    get _currentFaceText() {
-        let text = MINE_STATE_FACE[this.state].text;
-        if (this.isBomb) {
-            text = MINE_BOMB_FACE.text;
-        } else if (this.neighborCount > 0) {
-            text = MINE_NEIGHBOR_FACE[this.neighborCount].text;
-        }
-        return text;
-    }
-    get _currentClasses() {
-        const classes = [MINE_STATE_FACE[this.state].class];
-        if (this.isBomb) {
-            classes.push(MINE_BOMB_FACE.class);
-        } else if (this.neighborCount > 0) {
-            classes.push(MINE_NEIGHBOR_FACE[this.neighborCount].class);
-        }
-        return classes;
-    }
-    get _currentFace() {
+    get #currentFace() {
         const currentFace = {
             text: MINE_STATE_FACE[this.state].text,
             class: [MINE_STATE_FACE[this.state].class],
