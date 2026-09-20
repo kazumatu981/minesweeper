@@ -1,15 +1,11 @@
 import { EventHandler } from '../common/event-handler.js';
-
-/**
- * MINEオブジェクトのIDプレフィックス
- */
-const MINE_ID_PREFIX = '___mine___';
+import { formatMineId } from './formatter.js';
 
 //#region mine states
-const MINE_STATE_CLOSED = 'closed';
-const MINE_STATE_MUST_BE_BOMB = 'must-be';
-const MINE_STATE_MAY_BE_BOMB = 'may-be';
-const MINE_STATE_OPENED = 'opened';
+export const MINE_STATE_CLOSED = 'closed';
+export const MINE_STATE_MUST_BE_BOMB = 'must-be';
+export const MINE_STATE_MAY_BE_BOMB = 'may-be';
+export const MINE_STATE_OPENED = 'opened';
 
 export const MINE_STATES = {
     /**
@@ -90,7 +86,7 @@ const MINE_NEIGHBOR_FACE = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         return prev;
     }, {});
 
-const ALL_CLASSES = [
+const ALL_FACES = [
     MINE_BOMB_FACE,
     ...Object.values(MINE_STATE_FACE),
     ...Object.values(MINE_NEIGHBOR_FACE),
@@ -165,7 +161,7 @@ export class Mine extends EventHandler {
      * idの参照
      */
     get id() {
-        return _formatId(this.#rowId, this.#colId);
+        return formatMineId(this.#rowId, this.#colId);
     }
 
     #registerEvent() {
@@ -210,19 +206,20 @@ export class Mine extends EventHandler {
      */
     #adjustFace() {
         // スタイルの初期化
-        ALL_CLASSES.forEach((item) => {
+        ALL_FACES.forEach((item) => {
             this.#element.classList.remove(item.class);
         });
 
-        const currentFace = this.#currentFace;
+        const currentFace = this.currentFace;
 
+        // 現在のテキストとクラスを設定する
         this.element.textContent = currentFace.text;
         currentFace.class.forEach((className) => {
             this.element.classList.add(className);
         });
     }
 
-    get #currentFace() {
+    get currentFace() {
         const currentFace = {
             text: MINE_STATE_FACE[this.state].text,
             class: [MINE_STATE_FACE[this.state].class],
@@ -239,10 +236,6 @@ export class Mine extends EventHandler {
         }
         return currentFace;
     }
-}
-
-export function _formatId(rowId, colId) {
-    return `${MINE_ID_PREFIX}${rowId}-${colId}`;
 }
 
 const R_CLICK_STATE_MAP = {
