@@ -11,6 +11,9 @@ const MINE_STATE_MUST_BE_BOMB = 'must-be';
 const MINE_STATE_MAY_BE_BOMB = 'may-be';
 const MINE_STATE_OPENED = 'opened';
 
+/**
+ * MINEの状態を表す定数
+ */
 export const MINE_STATES = {
     /**
      * MINEが閉じている
@@ -35,8 +38,17 @@ export const MINE_STATES = {
 const MINE_EVENT_STATE_CHANGE = 'state-change';
 const MINE_EVENT_BOOM = 'boon';
 
+/**
+ * MINEのイベントを表す定数
+ */
 export const MINE_EVENTS = {
+    /**
+     * MINEの状態が変化したときに発火するイベント
+     */
     [MINE_EVENT_STATE_CHANGE]: MINE_EVENT_STATE_CHANGE,
+    /**
+     * MINEが爆発したときに発火するイベント
+     */
     [MINE_EVENT_BOOM]: MINE_EVENT_BOOM,
 };
 //#endregion
