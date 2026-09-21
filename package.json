@@ -3,9 +3,10 @@
     "version": "1.0.0",
     "description": "HTML + JavaScript Minesweeper app.",
     "main": "index.js",
+    "type": "module",
     "scripts": {
         "test:unit": "node --test app/__tests__/unit/**/*.test.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test:unit:coverage": "node --test --experimental-test-coverage app/__tests__/unit/**/*.test.js"
     },
     "repository": {
         "type": "git",
@@ -25,6 +26,7 @@
     "devDependencies": {
         "@eslint/js": "latest",
         "eslint": "latest",
-        "globals": "latest"
+        "globals": "latest",
+        "jsdom": "^30.1.0"
     }
 }

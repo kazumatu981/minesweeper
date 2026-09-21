@@ -1,38 +1,22 @@
+import {
+    __assertBetween,
+    __assertIsBoolean,
+    __assertIsNumber,
+    __assertSomeOf,
+} from '../common/assert.js';
+import { MINE_STATES } from './mine_state.js';
 import { EventHandler } from '../common/event-handler.js';
 import { formatMineId } from './formatter.js';
-
-//#region mine states
-export const MINE_STATE_CLOSED = 'closed';
-export const MINE_STATE_MUST_BE_BOMB = 'must-be';
-export const MINE_STATE_MAY_BE_BOMB = 'may-be';
-export const MINE_STATE_OPENED = 'opened';
-
-/**
- * MINEの状態を表す定数
- */
-export const MINE_STATES = {
-    /**
-     * MINEが閉じている
-     */
-    [MINE_STATE_CLOSED]: MINE_STATE_CLOSED,
-    /**
-     * BOMBだと思ってフラグを付けている状態
-     */
-    [MINE_STATE_MUST_BE_BOMB]: MINE_STATE_MUST_BE_BOMB,
-    /**
-     * BOMBかもしれない思ってフラグを付けている状態
-     */
-    [MINE_STATE_MAY_BE_BOMB]: MINE_STATE_MAY_BE_BOMB,
-    /**
-     * MINEが開いている
-     */
-    [MINE_STATE_OPENED]: MINE_STATE_OPENED,
-};
-//#endregion
+import {
+    MINE_BASE_CLASS,
+    MINE_STATE_CLASSES,
+    MINE_BOMB_CLASS,
+    MINE_NEIGHBOR_CLASSES,
+} from './mine_face.js';
 
 //#region mine events
-const MINE_EVENT_STATE_CHANGE = 'state-change';
-const MINE_EVENT_BOOM = 'boon';
+export const MINE_EVENT_STATE_CHANGE = 'state-change';
+export const MINE_EVENT_BOOM = 'boom';
 
 /**
  * MINEのイベントを表す定数
@@ -49,87 +33,41 @@ export const MINE_EVENTS = {
 };
 //#endregion
 
-//#region mine face and class
-const MINE_CLASS_PREFIX = '__mine_';
-const MINE_CLASS_BASE = '__mine_base';
-const MINE_STATE_FACE = {
-    /**
-     * MINEが閉じている
-     */
-    [MINE_STATE_CLOSED]: {
-        text: ' ',
-        class: `${MINE_CLASS_PREFIX}${MINE_STATE_CLOSED}`,
-    },
-    /**
-     * BOMBだと思ってフラグを付けている状態
-     */
-    [MINE_STATE_MUST_BE_BOMB]: {
-        text: 'F',
-        class: `${MINE_CLASS_PREFIX}${MINE_STATE_MUST_BE_BOMB}`,
-    },
-    /**
-     * BOMBかもしれない思ってフラグを付けている状態
-     */
-    [MINE_STATE_MAY_BE_BOMB]: {
-        text: '?',
-        class: `${MINE_CLASS_PREFIX}${MINE_STATE_MAY_BE_BOMB}`,
-    },
-    /**
-     * MINEが開いている
-     */
-    [MINE_STATE_OPENED]: {
-        text: ' ',
-        class: `${MINE_CLASS_PREFIX}${MINE_STATE_OPENED}`,
-    },
-};
-const MINE_BOMB_FACE = {
-    text: 'B',
-    class: `${MINE_CLASS_PREFIX}bomb`,
-};
-const MINE_NEIGHBOR_FACE = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    .map((i) => {
-        return {
-            text: i.toString(),
-            class: `${MINE_CLASS_PREFIX}neighbor${i}`,
-        };
-    })
-    .reduce((prev, current) => {
-        prev[current.text] = current;
-        return prev;
-    }, {});
-
-const ALL_FACES = [
-    MINE_BOMB_FACE,
-    ...Object.values(MINE_STATE_FACE),
-    ...Object.values(MINE_NEIGHBOR_FACE),
-];
-//#endregion
-
 export class Mine extends EventHandler {
     #element;
-    #rowId;
-    #colId;
-    #state;
+    #rowId = 0;
+    #colId = 0;
+    #state = MINE_STATES.closed;
     #neighborBombCount = 0;
     #isBomb = false;
+    #isTouched = false;
 
     constructor(rowId, colId) {
+        // 引数チェック
+        __assertIsNumber(rowId);
+        __assertIsNumber(colId);
+
+        // 親クラスのコンストラクタ
         super();
         this.#rowId = rowId;
         this.#colId = colId;
 
         this.#element = document.createElement('div');
         this.#element.id = this.id;
-        this.#element.classList.add(MINE_CLASS_BASE);
         this.#registerEvent();
 
-        this.state = MINE_STATE_CLOSED;
+        // 表面を調整する
+        this.#adjustFace();
     }
 
     get state() {
         return this.#state;
     }
     set state(value) {
+        // 予約された値がセットされているか
+        __assertSomeOf(value, Object.keys(MINE_STATES));
+
+        // 以前の値と異なる場合のみ値をセットする
         if (this.#state !== value) {
             this.#state = value;
             this.fire(MINE_EVENT_STATE_CHANGE, this);
@@ -146,7 +84,28 @@ export class Mine extends EventHandler {
      * 爆弾かどうかを設定する
      */
     set isBomb(value) {
+        // ブール値が設定されようとしているか
+        __assertIsBoolean(value);
+
         this.#isBomb = value;
+    }
+
+    /**
+     * チェックされたかどうかを取得する
+     */
+    get isTouched() {
+        return this.#isTouched;
+    }
+    /**
+     * チェックされたかどうかを設定する
+     */
+    set isTouched(value) {
+        // ブール値が設定されようとしているか
+        __assertIsBoolean(value);
+        if (this.#isTouched !== value) {
+            this.#isTouched = value;
+            this.#adjustFace();
+        }
     }
 
     /**
@@ -159,7 +118,57 @@ export class Mine extends EventHandler {
      * 近隣の爆弾の数を設定する
      */
     set neighborCount(value) {
+        // 数値で範囲に収まっているか
+        __assertIsNumber(value);
+        __assertBetween(value, 0, 8);
+
         this.#neighborBombCount = value;
+    }
+
+    #selectFaceClasses = {
+        [MINE_STATES.closed]: () => {
+            const selected = [
+                MINE_BASE_CLASS,
+                MINE_STATE_CLASSES[MINE_STATES.closed],
+            ];
+            if (this.isTouched) {
+                selected.push(MINE_NEIGHBOR_CLASSES[this.neighborCount]);
+            }
+            return selected;
+        },
+        [MINE_STATES.mayBe]: () => [
+            MINE_BASE_CLASS,
+            MINE_STATE_CLASSES[MINE_STATES.mayBe],
+        ],
+        [MINE_STATES.mustBe]: () => [
+            MINE_BASE_CLASS,
+            MINE_STATE_CLASSES[MINE_STATES.mustBe],
+        ],
+        [MINE_STATES.opened]: () => {
+            const selected = [
+                MINE_BASE_CLASS,
+                MINE_STATE_CLASSES[MINE_STATES.opened],
+            ];
+            if (this.isBomb) {
+                selected.push(MINE_BOMB_CLASS);
+            }
+            return selected;
+        },
+    };
+    #selectFaceText = {
+        [MINE_STATES.closed]: () =>
+            this.isTouched ? this.neighborCount.toString() : ' ',
+        [MINE_STATES.mayBe]: () => '?',
+        [MINE_STATES.mustBe]: () => 'F',
+        [MINE_STATES.opened]: () => (this.isBomb ? 'B' : ' '),
+    };
+
+    get faceClasses() {
+        return this.#selectFaceClasses[this.state]();
+    }
+
+    get faceText() {
+        return this.#selectFaceText[this.state]();
     }
 
     /**
@@ -197,8 +206,8 @@ export class Mine extends EventHandler {
      * 左クリックのイベントハンドラ
      */
     #onLeftClick() {
-        if ([MINE_STATE_CLOSED, MINE_STATE_MAY_BE_BOMB].includes(this.state)) {
-            this.state = MINE_STATE_OPENED;
+        if ([MINE_STATES.closed, MINE_STATES.mayBe].includes(this.state)) {
+            this.state = MINE_STATES.opened;
         }
     }
     /**
@@ -209,7 +218,7 @@ export class Mine extends EventHandler {
     }
 
     #checkBomb() {
-        if (this.state === MINE_STATE_OPENED && this.isBomb) {
+        if (this.state === MINE_STATES.opened && this.isBomb) {
             this.fire(MINE_EVENT_BOOM, this);
         }
     }
@@ -217,42 +226,21 @@ export class Mine extends EventHandler {
      * テキストとスタイルの調整
      */
     #adjustFace() {
-        // スタイルの初期化
-        ALL_FACES.forEach((item) => {
-            this.#element.classList.remove(item.class);
-        });
+        // 表面テキストとクラスをクリア
+        this.element.textContent = ' ';
+        this.element.classList.remove(...this.element.classList);
 
-        const currentFace = this.currentFace;
-
-        // 現在のテキストとクラスを設定する
-        this.element.textContent = currentFace.text;
-        currentFace.class.forEach((className) => {
-            this.element.classList.add(className);
-        });
-    }
-
-    get currentFace() {
-        const currentFace = {
-            text: MINE_STATE_FACE[this.state].text,
-            class: [MINE_STATE_FACE[this.state].class],
-        };
-        if (this.state === MINE_STATE_OPENED) {
-            if (this.isBomb) {
-                currentFace.text = MINE_BOMB_FACE.text;
-                currentFace.class.push(MINE_BOMB_FACE.class);
-            } else if (this.neighborCount > 0) {
-                const neighborFace = MINE_NEIGHBOR_FACE[this.neighborCount];
-                currentFace.text = neighborFace.text;
-                currentFace.class.push(neighborFace.class);
-            }
-        }
-        return currentFace;
+        // テキストを設定
+        this.element.textContent = this.faceText;
+        this.element.classList.add(...this.faceClasses);
     }
 }
 
 const R_CLICK_STATE_MAP = {
-    [MINE_STATE_CLOSED]: MINE_STATE_MUST_BE_BOMB,
-    [MINE_STATE_MUST_BE_BOMB]: MINE_STATE_MAY_BE_BOMB,
-    [MINE_STATE_MAY_BE_BOMB]: MINE_STATE_CLOSED,
-    [MINE_STATE_OPENED]: MINE_STATE_OPENED,
+    [MINE_STATES.closed]: MINE_STATES.mustBe,
+    [MINE_STATES.mustBe]: MINE_STATES.mayBe,
+    [MINE_STATES.mayBe]: MINE_STATES.closed,
+    [MINE_STATES.opened]: MINE_STATES.opened,
 };
+
+export * from './mine_state.js';

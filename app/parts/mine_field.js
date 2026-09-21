@@ -37,8 +37,8 @@ export class MineField extends EventHandler {
     }
     _registerEvent() {
         this._mineRows.forEach((row) => {
-            row.on(MINE_EVENTS.boon, (thisRow, thisMine) => {
-                this.fire(MINE_EVENTS.boon, thisRow, thisMine);
+            row.on(MINE_EVENTS.boom, (thisRow, thisMine) => {
+                this.fire(MINE_EVENTS.boom, thisRow, thisMine);
             });
             row.on(MINE_EVENTS['state-change'], (thisRow, thisMine) => {
                 this.fire(MINE_EVENTS['state-change'], thisRow, thisMine);

@@ -25,8 +25,8 @@ function onPageLoad() {
         mine.on(MINE_EVENTS['state-change'], (thisMine) => {
             console.log(`state changed: ${thisMine.id}`);
         });
-        mine.on(MINE_EVENTS.boon, (thisMine) => {
-            console.log(`boon: ${thisMine.id}`);
+        mine.on(MINE_EVENTS.boom, (thisMine) => {
+            console.log(`boom: ${thisMine.id}`);
         });
     });
     const testPanel2 = document.getElementById('test002');

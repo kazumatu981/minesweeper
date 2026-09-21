@@ -39,8 +39,8 @@ export class MineRow extends EventHandler {
 
     _resisterEvents() {
         this._items.forEach((item) => {
-            item.on(MINE_EVENTS.boon, (thisMine) => {
-                this.fire(MINE_EVENTS.boon, thisMine);
+            item.on(MINE_EVENTS.boom, (thisMine) => {
+                this.fire(MINE_EVENTS.boom, thisMine);
             });
             item.on(MINE_EVENTS['state-change'], (thisMine) => {
                 this.fire(MINE_EVENTS['state-change'], thisMine);

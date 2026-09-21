@@ -1,22 +1,15 @@
-import { mock } from 'node:test';
+import { JSDOM } from 'jsdom';
 
 const defaultDocument = globalThis.document;
 
 export function mockDocument() {
-    const mockDocument = {
-        createElement: mock.fn(() => {
-            return {
-                classList: {
-                    add: mock.fn(),
-                    remove: mock.fn(),
-                },
-                textContent: '',
-                addEventListener: mock.fn(() => {}),
-            };
-        }),
-    };
+    const dom = new JSDOM();
+    const mockDocument = dom.window.document;
     globalThis.document = mockDocument;
-    return mockDocument;
+    return {
+        dom,
+        document: mockDocument,
+    };
 }
 
 export function restoreDocument() {
