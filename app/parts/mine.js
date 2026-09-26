@@ -4,7 +4,7 @@ import {
     __assertIsNumber,
     __assertSomeOf,
 } from '../common/assert.js';
-import { MINE_STATES } from './mine_state.js';
+import { MINE_STATE_BOMB, MINE_STATES } from './mine_state.js';
 import { EventHandler } from '../common/event-handler.js';
 import { formatMineId } from './formatter.js';
 import {
@@ -45,6 +45,7 @@ export class Mine extends EventHandler {
     #state = MINE_STATES.closed;
     #neighborBombCount = 0;
     #isBomb = false;
+    #shouldDispatchBomb = true;
     #isTouched = false;
 
     constructor(rowId, colId) {
@@ -93,6 +94,16 @@ export class Mine extends EventHandler {
         __assertIsBoolean(value);
 
         this.#isBomb = value;
+    }
+
+    get shouldDispatchBomb() {
+        return this.#shouldDispatchBomb;
+    }
+    set shouldDispatchBomb(value) {
+        // ブール値が設定されようとしているか
+        __assertIsBoolean(value);
+
+        this.#shouldDispatchBomb = value;
     }
 
     /**
@@ -170,7 +181,18 @@ export class Mine extends EventHandler {
         this.on(MINE_EVENT_STATE_CHANGE, this.#adjustFace.bind(this));
 
         // 爆弾判定の登録
-        this.on(MINE_EVENT_STATE_CHANGE, this.#checkBomb.bind(this));
+        this.on(
+            MINE_EVENT_STATE_CHANGE,
+            (thisObject) => {
+                thisObject.fire(MINE_EVENT_BOOM, this);
+            },
+            (thisObject) => {
+                return (
+                    thisObject.shouldDispatchBomb &&
+                    thisObject.state === MINE_STATE_BOMB
+                );
+            }
+        );
     }
 
     /**
@@ -186,11 +208,6 @@ export class Mine extends EventHandler {
         this.state = this.#selectNextState[CHANGER.rClick][this.state]();
     }
 
-    #checkBomb() {
-        if (this.state === MINE_STATES.bomb) {
-            this.fire(MINE_EVENT_BOOM, this);
-        }
-    }
     /**
      * テキストとスタイルの調整
      */

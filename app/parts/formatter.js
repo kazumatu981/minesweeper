@@ -1,4 +1,4 @@
-import { MINE_PREFIX } from './prefixes.js';
+import { MINE_PREFIX, MINE_ROW_PREFIX } from './prefixes.js';
 
 function _format(prefix, suffix, separator, ...args) {
     const body = [...args].map((arg) => arg.toString()).join(separator);
@@ -21,4 +21,12 @@ export function formatMineId(...args) {
 
 export function formatMineClass(...args) {
     return _formatClass(MINE_PREFIX, ...args);
+}
+
+export function formatMineRowId(...args) {
+    return _formatId(MINE_ROW_PREFIX, ...args);
+}
+
+export function formatMineRowClass(...args) {
+    return _formatClass(MINE_ROW_PREFIX, ...args);
 }
