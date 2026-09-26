@@ -8,9 +8,8 @@ interface EventHandlerElement<T> {
 /**
  * イベントを管理する基底クラス。 本プロジェクトで活用する部品はこれを継承して作成すること。
  */
-export class EventHandler<TEvents extends string> {
-    readonly #events: Partial<Record<TEvents, EventHandlerElement<this>[]>> =
-        {};
+export class EventHandler<TEvents> {
+    readonly #events: Map<TEvents, EventHandlerElement<this>[]> = new Map();
 
     //#region メソッド
     /**
@@ -22,13 +21,12 @@ export class EventHandler<TEvents extends string> {
      * @param when - event発生条件
      */
     on(eventName: TEvents, element: EventHandlerElement<this>) {
-        const handlers = this.#events[eventName];
-        if (handlers === undefined) {
-            // 見つからなかった場合: 新しい配列を作成して eventHandlerを追加する
-            this.#events[eventName] = [element];
-        } else {
+        if (this.#events.has(eventName)) {
             //見つかった場合: 配列に eventHandlerを追加する
-            handlers.push(element);
+            this.#events.get(eventName)!.push(element);
+        } else {
+            // 見つからなかった場合: 新しい配列を作成して eventHandlerを追加する
+            this.#events.set(eventName, [element]);
         }
     }
 
@@ -41,7 +39,7 @@ export class EventHandler<TEvents extends string> {
      * @param args イベントに渡す引数
      */
     emit(eventName: TEvents, ...args: any[]) {
-        const handlerDefines = this.#events[eventName] ?? [];
+        const handlerDefines = this.#events.get(eventName) ?? [];
         // 見つかった場合: 配列の各要素に対して eventHandlerを実行する
         for (const handlerDefine of handlerDefines) {
             if (handlerDefine.when) {

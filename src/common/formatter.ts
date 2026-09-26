@@ -10,7 +10,7 @@ function _format(
         .join(separator);
 }
 
-export function _formatId(
+export function formatId(
     prefix: string,
     suffix: string | undefined,
     ...args: (string | number)[]
@@ -18,7 +18,7 @@ export function _formatId(
     return _format(prefix, suffix, '-', ...args);
 }
 
-export function _formatClass(
+export function formatClass(
     prefix: string,
     suffix: string | undefined,
     ...args: (string | number)[]
