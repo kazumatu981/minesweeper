@@ -14,18 +14,26 @@ export class EventHandler {
      * に予約しておく。同じイベント名が指定されても、イベントは配列で格納されるため、上書きされることはない。
      * @param {string} eventName - イベント名
      * @param {function} eventHandler - イベントハンドラ
+     * @param {function} when - event発生条件
      */
-    on(eventName, eventHandler) {
+    on(eventName, eventHandler, when) {
         __assertIsString(eventName);
         __assertIsFunction(eventHandler);
+        if (when) {
+            __assertIsFunction(when);
+        }
 
         const handlers = this._events[eventName];
+        const handlerDefine = {
+            action: eventHandler,
+            when,
+        };
         if (handlers === undefined) {
             // 見つからなかった場合: 新しい配列を作成して eventHandlerを追加する
-            this._events[eventName] = [eventHandler];
+            this._events[eventName] = [handlerDefine];
         } else {
             //見つかった場合: 配列に eventHandlerを追加する
-            handlers.push(eventHandler);
+            handlers.push(handlerDefine);
         }
     }
 
@@ -40,14 +48,16 @@ export class EventHandler {
     fire(eventName, ...args) {
         __assertIsString(eventName);
 
-        const handlers = this._events[eventName];
-        if (handlers === undefined) {
-            // 見つからなかった場合: 何もしない
-            return;
-        }
+        const handlerDefines = this._events[eventName] ?? [];
         // 見つかった場合: 配列の各要素に対して eventHandlerを実行する
-        for (const handler of handlers) {
-            handler(this, ...args);
+        for (const handlerDefine of handlerDefines) {
+            if (handlerDefine.when) {
+                if (handlerDefine.when(this, ...args)) {
+                    handlerDefine.action(this, ...args);
+                }
+            } else {
+                handlerDefine.action(this, ...args);
+            }
         }
     }
     //#endregion
