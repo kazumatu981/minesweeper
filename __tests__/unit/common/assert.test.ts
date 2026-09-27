@@ -7,7 +7,7 @@ import {
     __assertBetween,
     __assertSomeOf,
     __safeGetElementById,
-} from '../../src/common/assert.js';
+} from '../../../src/common/assert.js';
 
 suite('unittest: __assertBetween', () => {
     test('assert when small value.', () => {

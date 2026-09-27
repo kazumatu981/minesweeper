@@ -1,5 +1,5 @@
 import { formatClass } from '../../common/formatter.js';
-import { MINE_PREFIX } from '../../common/prefixes.js';
+import { MINE_PREFIX, MINE_ROW_PREFIX } from './prefixes.js';
 import { type MineState, MINE_STATES } from './states.js';
 
 const BASE_SUB_PREFIX = 'base';
@@ -29,7 +29,7 @@ export const MINE_STATE_CLASSES = Object.fromEntries(
  * 近隣の爆弾数を表すパネルのクラス
  */
 export const MINE_NEIGHBOR_CLASSES: Record<number, string> = Array.from({
-    length: 9,
+    length: 10,
 }).reduce((defines: Record<number, string>, _, index) => {
     defines[index] = formatClass(
         MINE_PREFIX,
@@ -44,3 +44,12 @@ export const MINE_NEIGHBOR_CLASSES: Record<number, string> = Array.from({
  * 爆弾パネルのクラス
  */
 export const MINE_BOMB_CLASS = formatClass(MINE_PREFIX, BOMB_SUFFIX);
+
+/**
+ * MineRowの基底クラス
+ */
+export const MINE_ROW_BASE_CLASS = formatClass(
+    MINE_ROW_PREFIX,
+    undefined,
+    BASE_SUB_PREFIX
+);

@@ -20,7 +20,7 @@ export class EventHandler<TEvents> {
      * @param eventHandler - イベントハンドラ
      * @param when - event発生条件
      */
-    on(eventName: TEvents, element: EventHandlerElement<this>) {
+    public on(eventName: TEvents, element: EventHandlerElement<this>) {
         if (this.#events.has(eventName)) {
             //見つかった場合: 配列に eventHandlerを追加する
             this.#events.get(eventName)!.push(element);
@@ -38,7 +38,7 @@ export class EventHandler<TEvents> {
      * @param eventName イベント名
      * @param args イベントに渡す引数
      */
-    emit(eventName: TEvents, ...args: any[]) {
+    protected emit(eventName: TEvents, ...args: any[]) {
         const handlerDefines = this.#events.get(eventName) ?? [];
         // 見つかった場合: 配列の各要素に対して eventHandlerを実行する
         for (const handlerDefine of handlerDefines) {

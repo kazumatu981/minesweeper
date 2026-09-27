@@ -1,0 +1,107 @@
+:root {
+  --mine-size: 3em;
+  --mine-border-radius: 0.25em;
+
+  --grey-level-0: #fff;
+  --grey-level-1: #eee;
+  --grey-level-2: #ddd;
+  --grey-level-3: #ccc;
+  --grey-level-4: #bbb;
+  --grey-level-5: #aaa;
+  --grey-level-6: #999;
+  --grey-level-7: #888;
+  --grey-level-8: #777;
+  --grey-level-9: #666;
+  --grey-level-a: #555;
+  --grey-level-b: #444;
+  --grey-level-c: #333;
+  --grey-level-d: #222;
+  --grey-level-e: #111;
+  --grey-level-f: #000;
+
+  --navy: #002451;
+  --green: #139c54;
+  --red: #c43d3d;
+  --dark-green: #204732;
+  --dark-red: #5c2822;
+
+  --neighbor-0: #139c54;
+  --neighbor-1: #269550;
+  --neighbor-2: #398e4d;
+  --neighbor-3: #4c8649;
+  --neighbor-4: #5f7f46;
+  --neighbor-5: #727842;
+  --neighbor-6: #85713f;
+  --neighbor-7: #98693b;
+  --neighbor-8: #ab6238;
+  --neighbor-9: #c43d3d;
+}
+
+.___mine_row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.___mine_base {
+  width: var(--mine-size);
+  height: var(--mine-size);
+  line-height: var(--mine-size);
+  border-radius: var(--mine-border-radius);
+  text-align: center;
+  border: 1px solid var(--grey-level-3);
+}
+.___mine_state_opened {
+  background-color: var(--grey-level-1);
+}
+.___mine_state_closed {
+  background-color: var(--grey-level-7);
+}
+.___mine_state_touched {
+  background-color: var(--grey-level-2);
+}
+.___mine_state_mustBe {
+  color: var(--red);
+  background-color: var(--grey-level-2);
+}
+.___mine_state_mayBe {
+  color: var(--green);
+  background-color: var(--grey-level-2);
+}
+.___mine_state_bomb {
+  color: var(--grey-level-3);
+  background-color: var(--red);
+}
+
+.___mine_neighbor_0 {
+  color: var(--neighbor-0);
+}
+.___mine_neighbor_1 {
+  color: var(--neighbor-1);
+}
+.___mine_neighbor_2 {
+  color: var(--neighbor-2);
+}
+.___mine_neighbor_3 {
+  color: var(--neighbor-3);
+}
+.___mine_neighbor_4 {
+  color: var(--neighbor-4);
+}
+.___mine_neighbor_5 {
+  color: var(--neighbor-5);
+}
+.___mine_neighbor_6 {
+  color: var(--neighbor-6);
+}
+.___mine_neighbor_7 {
+  color: var(--neighbor-7);
+}
+.___mine_neighbor_8 {
+  color: var(--neighbor-8);
+}
+.___mine_neighbor_9 {
+  color: var(--neighbor-9);
+}
