@@ -6,9 +6,8 @@
     "type": "module",
     "scripts": {
         "lint": "eslint .",
-        "test:ts-unit": "node --import tsx --test __tests__/**/*.test.ts",
-        "test:unit": "node --test app/__tests__/unit/**/*.test.js",
-        "test:unit:coverage": "node --test --experimental-test-coverage app/__tests__/unit/**/*.test.js"
+        "test:unit": "node --import tsx --test __tests__/**/*.test.ts",
+        "test:unit-coverage": "node --import tsx --test --experimental-test-coverage __tests__/**/*.test.ts"
     },
     "repository": {
         "type": "git",

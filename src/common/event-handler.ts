@@ -3,7 +3,7 @@ type EventPredicate<T> = (thisObject: T, ...args: unknown[]) => boolean;
 
 interface EventHandlerElement<T> {
     action: EventAction<T>;
-    when?: EventPredicate<T>;
+    when: EventPredicate<T> | undefined;
 }
 /**
  * イベントを管理する基底クラス。 本プロジェクトで活用する部品はこれを継承して作成すること。
@@ -20,7 +20,12 @@ export class EventHandler<TEvents> {
      * @param eventHandler - イベントハンドラ
      * @param when - event発生条件
      */
-    public on(eventName: TEvents, element: EventHandlerElement<this>) {
+    public on(
+        eventName: TEvents,
+        action: EventAction<this>,
+        when?: EventPredicate<this>
+    ) {
+        const element: EventHandlerElement<this> = { action, when };
         if (this.#events.has(eventName)) {
             //見つかった場合: 配列に eventHandlerを追加する
             this.#events.get(eventName)!.push(element);

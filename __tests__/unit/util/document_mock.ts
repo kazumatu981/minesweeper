@@ -1,19 +1,25 @@
 import { JSDOM } from 'jsdom';
 
 const defaultDocument = globalThis.document;
-
-function dispatchMouseEvent(element: Element, eventName: string) {
-    const event = new MouseEvent(eventName, {
-        bubbles: true,
-        cancelable: true,
-    });
-    element.dispatchEvent(event);
+export interface Mocker {
+    dispatchMouseEvent: (element: Element, eventName: string) => void;
+    dom: JSDOM;
+    document: Document;
 }
 
-export function mockDocument() {
+export function mockDocument(): Mocker {
     const dom = new JSDOM();
     const mockDocument = dom.window.document;
     globalThis.document = mockDocument;
+
+    function dispatchMouseEvent(element: Element, eventName: string) {
+        const event = new dom.window.MouseEvent(eventName, {
+            bubbles: true,
+            cancelable: true,
+        });
+        element.dispatchEvent(event);
+    }
+
     return {
         dispatchMouseEvent,
         dom,

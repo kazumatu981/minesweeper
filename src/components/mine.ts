@@ -244,21 +244,20 @@ export class Mine extends EventHandler<MineEvent> {
         });
 
         // スタイル変更イベントの登録
-        this.on('state-change', {
-            action: (thisObject: Mine) => {
-                thisObject.#adjustFace();
-            },
+        this.on('state-change', (thisObject: Mine) => {
+            thisObject.#adjustFace();
         });
 
         // 爆弾判定の登録
-        this.on('state-change', {
-            action: (thisObject: Mine) => {
+        this.on(
+            'state-change',
+            (thisObject: Mine) => {
                 thisObject.emit('boom');
             },
-            when: (thisObject: Mine) => {
+            (thisObject: Mine) => {
                 return thisObject.shouldEmitBoon && thisObject.state === 'bomb';
-            },
-        });
+            }
+        );
     }
 
     /**
