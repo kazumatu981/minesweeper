@@ -1,15 +1,28 @@
 import js from '@eslint/js';
 import globals from 'globals';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig([
+    globalIgnores(['app/**', 'index.js']),
     {
-        files: ['**/*.{js,mjs,cjs}'],
+        files: ['bin/**/*.mjs'],
         plugins: { js },
         extends: ['js/recommended'],
-        languageOptions: { globals: globals.browser },
+        languageOptions: { globals: globals.node },
     },
     {
+        files: ['**/*.ts'],
+        extends: [
+            js.configs.recommended,
+            tseslint.configs.recommendedTypeChecked,
+        ],
+        languageOptions: {
+            parserOptions: { projectService: true },
+        },
+    },
+    {
+        files: ['**/*.{ts,mjs}'],
         rules: {
             // メトリクスに関するルール
             complexity: ['error', { max: 10 }],
@@ -25,11 +38,6 @@ export default defineConfig([
             'max-nested-callbacks': ['error', { max: 3 }],
             'max-params': ['error', { max: 4 }],
             'max-statements': ['error', { max: 10 }],
-        },
-    },
-    {
-        ignores: ['learn/sample_project/sample000/**'],
-        rules: {
             // 未使用変数
             'no-unused-vars': [
                 'error',
@@ -53,9 +61,32 @@ export default defineConfig([
         },
     },
     {
-        files: ['**/__tests__/**/*.{js,mjs,cjs}'],
+        files: ['**/*.ts'],
+        rules: {
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                },
+            ],
+        },
+    },
+    {
+        files: ['__tests__/**/*.ts'],
         rules: {
             'no-console': 'off',
+            'max-lines-per-function': 'off',
+            'max-nested-callbacks': 'off',
         },
+    },
+    {
+        files: ['src/**/*.ts', '__tests__/ui-components/**/*.ts'],
+        languageOptions: { globals: globals.browser },
+    },
+    {
+        files: ['__tests__/unit/**/*.ts', 'eslint.config.ts'],
+        languageOptions: { globals: globals.node },
     },
 ]);

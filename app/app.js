@@ -1,4 +1,4 @@
-import { EventHandler } from './common/event-handler.js';
+import { EventHandler } from '../src/common/event-handler.js';
 
 export class App extends EventHandler {
     _config;

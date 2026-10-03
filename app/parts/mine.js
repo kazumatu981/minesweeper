@@ -3,9 +3,9 @@ import {
     __assertIsBoolean,
     __assertIsNumber,
     __assertSomeOf,
-} from '../common/assert.js';
+} from '../../src/common/assert.js';
 import { MINE_STATE_BOMB, MINE_STATES } from './mine_state.js';
-import { EventHandler } from '../common/event-handler.js';
+import { EventHandler } from '../../src/common/event-handler.js';
 import { formatMineId } from './formatter.js';
 import {
     MINE_BASE_CLASS,

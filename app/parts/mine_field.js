@@ -1,4 +1,4 @@
-import { EventHandler } from '../common/event-handler.js';
+import { EventHandler } from '../../src/common/event-handler.js';
 import { MineRow } from './mine_row.js';
 import { MINE_EVENTS } from './mine.js';
 
