@@ -27,6 +27,10 @@ export class MineRow extends EventHandler<MineEvent> {
         this.#proxyEvents();
     }
 
+    get element(): HTMLElement {
+        return this.#element;
+    }
+
     get id(): string {
         return formatId(MINE_ROW_PREFIX, undefined, this.#rowId);
     }

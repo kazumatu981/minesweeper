@@ -31,7 +31,9 @@ export function __assertBetween(
  */
 export function __assertSomeOf<T>(value: T, array: T[]): void {
     if (!array.includes(value)) {
-        throw new AssertionError(`The value ${value} is not found on ${array}`);
+        throw new AssertionError(
+            `The value ${String(value)} is not found on [${array.map((v) => String(v)).join(', ')}]`
+        );
     }
 }
 /**

@@ -9,8 +9,8 @@ import {
     __safeGetElementById,
 } from '../../../src/common/assert.js';
 
-suite('unittest: __assertBetween', () => {
-    test('assert when small value.', () => {
+void suite('unittest: __assertBetween', () => {
+    void test('assert when small value.', () => {
         const test = -100;
         const minimum = 0;
         const maximum = 100;
@@ -19,7 +19,7 @@ suite('unittest: __assertBetween', () => {
             __assertBetween(test, minimum, maximum);
         }, AssertionError);
     });
-    test('assert when when under minimum boundary.', () => {
+    void test('assert when when under minimum boundary.', () => {
         const test = -1;
         const minimum = 0;
         const maximum = 100;
@@ -28,28 +28,28 @@ suite('unittest: __assertBetween', () => {
             __assertBetween(test, minimum, maximum);
         }, AssertionError);
     });
-    test('not assert when minimum boundary.', () => {
+    void test('not assert when minimum boundary.', () => {
         const test = 0;
         const minimum = 0;
         const maximum = 100;
 
         __assertBetween(test, minimum, maximum);
     });
-    test('not assert when inner boundary.', () => {
+    void test('not assert when inner boundary.', () => {
         const test = 50;
         const minimum = 0;
         const maximum = 100;
 
         __assertBetween(test, minimum, maximum);
     });
-    test('not assert when maximum boundary.', () => {
+    void test('not assert when maximum boundary.', () => {
         const test = 100;
         const minimum = 0;
         const maximum = 100;
 
         __assertBetween(test, minimum, maximum);
     });
-    test('assert when when over maximum boundary.', () => {
+    void test('assert when when over maximum boundary.', () => {
         const test = 101;
         const minimum = 0;
         const maximum = 100;
@@ -58,7 +58,7 @@ suite('unittest: __assertBetween', () => {
             __assertBetween(test, minimum, maximum);
         }, AssertionError);
     });
-    test('assert when when large value.', () => {
+    void test('assert when when large value.', () => {
         const test = 300;
         const minimum = 0;
         const maximum = 100;
@@ -69,22 +69,22 @@ suite('unittest: __assertBetween', () => {
     });
 });
 
-suite('unittest: __assertSomeOf<T>', () => {
-    describe('some of number', () => {
-        test('not assert on included', () => {
+void suite('unittest: __assertSomeOf<T>', () => {
+    void describe('some of number', () => {
+        void test('not assert on included', () => {
             __assertSomeOf(1, [1, 2, 3]);
         });
-        test('assert on not include', () => {
+        void test('assert on not include', () => {
             assert.throws(() => {
                 __assertSomeOf(0, [1, 2, 3]);
             }, AssertionError);
         });
     });
-    describe('some of string', () => {
-        test('not assert on included', () => {
+    void describe('some of string', () => {
+        void test('not assert on included', () => {
             __assertSomeOf('1', ['1', '2', '3']);
         });
-        test('assert on not include', () => {
+        void test('assert on not include', () => {
             assert.throws(() => {
                 __assertSomeOf('0', ['1', '2', '3']);
             }, AssertionError);
@@ -92,7 +92,7 @@ suite('unittest: __assertSomeOf<T>', () => {
     });
 });
 
-suite('unittest: __safeGetElementById', () => {
+void suite('unittest: __safeGetElementById', () => {
     const defaultDocument = globalThis.document;
     let dom = undefined;
     let mockDocument;
@@ -110,11 +110,11 @@ suite('unittest: __safeGetElementById', () => {
         globalThis.document = defaultDocument;
     });
 
-    test('not assert on element founded', () => {
+    void test('not assert on element founded', () => {
         __safeGetElementById(theElementId);
     });
 
-    test('assert on not element founded', () => {
+    void test('assert on not element founded', () => {
         assert.throws(() => {
             __safeGetElementById(`__${theElementId}`);
         }, AssertionError);

@@ -1,5 +1,5 @@
-type EventAction<T> = (thisObject: T, ...args: any[]) => void;
-type EventPredicate<T> = (thisObject: T, ...args: any[]) => boolean;
+type EventAction<T> = (thisObject: T, ...args: unknown[]) => void;
+type EventPredicate<T> = (thisObject: T, ...args: unknown[]) => boolean;
 
 interface EventHandlerElement<T> {
     action: EventAction<T>;
@@ -38,7 +38,7 @@ export class EventHandler<TEvents> {
      * @param eventName イベント名
      * @param args イベントに渡す引数
      */
-    protected emit(eventName: TEvents, ...args: any[]) {
+    protected emit(eventName: TEvents, ...args: unknown[]) {
         const handlerDefines = this.#events.get(eventName) ?? [];
         // 見つかった場合: 配列の各要素に対して eventHandlerを実行する
         for (const handlerDefine of handlerDefines) {

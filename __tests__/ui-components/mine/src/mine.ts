@@ -10,7 +10,9 @@ document.addEventListener('DOMContentLoaded', onPageLoad);
 function onPageLoad() {
     const testPanel1 = document.getElementById('testPanel1');
     const testPanel2 = document.getElementById('testPanel2');
-    if (!testPanel1 || !testPanel2) throw new Error("'testPanel' not found.");
+    if (!testPanel1 || !testPanel2) {
+        throw new Error("'testPanel' not found.");
+    }
 
     const mine0_0 = new Mine(0, 0);
     const mine0_1 = new Mine(0, 1);
@@ -39,7 +41,7 @@ function onPageLoad() {
         });
     });
 
-    const mines1 = Array.from({ length: 10 }).map((_, index) => {
+    const _mines1 = Array.from({ length: 10 }).map((_, index) => {
         const mine = new Mine(1, index);
 
         mine.setNeighborCount(index);
