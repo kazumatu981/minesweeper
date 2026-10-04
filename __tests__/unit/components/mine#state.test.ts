@@ -33,7 +33,7 @@ void describe('Mine state', () => {
         onBombTouchMock.mock.resetCalls();
     });
 
-    void it("'closed' on initialize", () => {
+    void it('[initialize]', () => {
         const mine = new Mine(1, 1);
         mine.on('state-change', onStateChangeMock);
         mine.on('boom', onBombTouchMock);
@@ -43,32 +43,34 @@ void describe('Mine state', () => {
         assert.equal(onBombTouchMock.mock.calls.length, 0);
     });
 
-    void it("'closed' --> 'touched' when not a bomb", () => {
-        const mine = new Mine(1, 1);
-        mine.on('state-change', onStateChangeMock);
-        mine.on('boom', onBombTouchMock);
+    void describe('[touch]', () => {
+        void it("'closed' --> 'touched' when not a bomb", () => {
+            const mine = new Mine(1, 1);
+            mine.on('state-change', onStateChangeMock);
+            mine.on('boom', onBombTouchMock);
 
-        mine.touch();
+            mine.touch();
 
-        assert.equal(mine.state, MINE_STATES.touched);
-        assert.equal(onStateChangeMock.mock.calls.length, 1);
-        assert.equal(onBombTouchMock.mock.calls.length, 0);
+            assert.equal(mine.state, MINE_STATES.touched);
+            assert.equal(onStateChangeMock.mock.calls.length, 1);
+            assert.equal(onBombTouchMock.mock.calls.length, 0);
+        });
+
+        void it("'closed' --> 'touched' when it is a bomb", () => {
+            const mine = new Mine(1, 1);
+            mine.setBomb();
+            mine.on('state-change', onStateChangeMock);
+            mine.on('boom', onBombTouchMock);
+
+            mine.touch();
+
+            assert.equal(mine.state, MINE_STATES.touched);
+            assert.equal(onStateChangeMock.mock.calls.length, 1);
+            assert.equal(onBombTouchMock.mock.calls.length, 0);
+        });
     });
 
-    void it("'closed' --> 'touched' when it is a bomb", () => {
-        const mine = new Mine(1, 1);
-        mine.setBomb();
-        mine.on('state-change', onStateChangeMock);
-        mine.on('boom', onBombTouchMock);
-
-        mine.touch();
-
-        assert.equal(mine.state, MINE_STATES.touched);
-        assert.equal(onStateChangeMock.mock.calls.length, 1);
-        assert.equal(onBombTouchMock.mock.calls.length, 0);
-    });
-
-    void describe('right click events', () => {
+    void describe('[right click]', () => {
         void it("not touched cycle trough 'closed' --> 'mustBe' --> 'mayBe' --> 'closed' when is NOT a bomb.", () => {
             const mine = new Mine(1, 1);
             mine.on('state-change', onStateChangeMock);
@@ -171,6 +173,190 @@ void describe('Mine state', () => {
             assert.equal(onStateChangeMock.mock.calls.length, 3);
             assert.equal(onBombTouchMock.mock.calls.length, 0);
         });
+        void it('opened state, right click does nothing', () => {
+            const mine = new Mine(1, 1);
+            mine.on('state-change', onStateChangeMock);
+            mine.on('boom', onBombTouchMock);
+
+            // click
+            mocker.dispatchMouseEvent(mine.element, 'click');
+            onStateChangeMock.mock.resetCalls();
+            onBombTouchMock.mock.resetCalls();
+
+            // right click
+            mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+            assert.equal(mine.state, MINE_STATES.opened);
+            assert.equal(onStateChangeMock.mock.calls.length, 0);
+            assert.equal(onBombTouchMock.mock.calls.length, 0);
+        });
+        void it('bomb state, right click does nothing', () => {
+            const mine = new Mine(1, 1);
+            mine.setBomb();
+            mine.on('state-change', onStateChangeMock);
+            mine.on('boom', onBombTouchMock);
+
+            // click
+            mocker.dispatchMouseEvent(mine.element, 'click');
+            onStateChangeMock.mock.resetCalls();
+            onBombTouchMock.mock.resetCalls();
+
+            // right click
+            mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+            assert.equal(mine.state, MINE_STATES.bomb);
+            assert.equal(onStateChangeMock.mock.calls.length, 0);
+            assert.equal(onBombTouchMock.mock.calls.length, 0);
+        });
     });
-    void describe('click events', () => {});
+    void describe('[click]', () => {
+        void describe('state: closed', () => {
+            void it("when it's not a bomb, goes to 'open' state", () => {
+                const mine = new Mine(1, 1);
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.opened);
+                assert.equal(onStateChangeMock.mock.calls.length, 1);
+                assert.equal(onBombTouchMock.mock.calls.length, 0);
+            });
+            void it("when it's a bomb, goes to 'bomb' state", () => {
+                const mine = new Mine(1, 1);
+                mine.setBomb();
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(onStateChangeMock.mock.calls.length, 1);
+                assert.equal(onBombTouchMock.mock.calls.length, 1);
+            });
+        });
+        void describe('state: touched', () => {
+            void it("when it's not a bomb, goes to 'open' state", () => {
+                const mine = new Mine(1, 1);
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mine.touch();
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.opened);
+                assert.equal(onStateChangeMock.mock.calls.length, 1);
+                assert.equal(onBombTouchMock.mock.calls.length, 0);
+            });
+            void it("when it's a bomb, goes to 'bomb' state", () => {
+                const mine = new Mine(1, 1);
+                mine.setBomb();
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mine.touch();
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(onStateChangeMock.mock.calls.length, 1);
+                assert.equal(onBombTouchMock.mock.calls.length, 1);
+            });
+        });
+        void describe('state: mayBe', () => {
+            void it("when it's not a bomb, goes to 'open' state", () => {
+                const mine = new Mine(1, 1);
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+                mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.opened);
+                assert.equal(onStateChangeMock.mock.calls.length, 1);
+                assert.equal(onBombTouchMock.mock.calls.length, 0);
+            });
+            void it("when it's a bomb, goes to 'bomb' state", () => {
+                const mine = new Mine(1, 1);
+                mine.setBomb();
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+                mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(onStateChangeMock.mock.calls.length, 1);
+                assert.equal(onBombTouchMock.mock.calls.length, 1);
+            });
+        });
+        void describe('state: mustBe', () => {
+            void it("when  it's not a bomb, no state change", () => {
+                const mine = new Mine(1, 1);
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.mustBe);
+                assert.equal(onStateChangeMock.mock.calls.length, 0);
+                assert.equal(onBombTouchMock.mock.calls.length, 0);
+            });
+            void it("when it's a bomb, no state change", () => {
+                const mine = new Mine(1, 1);
+                mine.setBomb();
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mocker.dispatchMouseEvent(mine.element, 'contextmenu');
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.mustBe);
+                assert.equal(onStateChangeMock.mock.calls.length, 0);
+                assert.equal(onBombTouchMock.mock.calls.length, 0);
+            });
+        });
+        void describe('state: bomb', () => {
+            void it("when  it's not a bomb, no state change", () => {
+                const mine = new Mine(1, 1);
+                mine.setBomb();
+                mine.on('state-change', onStateChangeMock);
+                mine.on('boom', onBombTouchMock);
+
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                onStateChangeMock.mock.resetCalls();
+                onBombTouchMock.mock.resetCalls();
+
+                // click
+                mocker.dispatchMouseEvent(mine.element, 'click');
+                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(onStateChangeMock.mock.calls.length, 0);
+                assert.equal(onBombTouchMock.mock.calls.length, 0);
+            });
+        });
+    });
 });
