@@ -58,15 +58,11 @@ export class MineRow extends EventHandler<MineEvent> {
 
     #proxyEvents() {
         this.#mines.forEach((mine) => {
-            mine.on('state-change', {
-                action: (senderMine, ...args) => {
-                    this.emit('state-change', senderMine, ...args);
-                },
+            mine.on('state-change', (senderMine, ...args) => {
+                this.emit('state-change', senderMine, ...args);
             });
-            mine.on('boom', {
-                action: (senderMine, ...args) => {
-                    this.emit('boom', senderMine, ...args);
-                },
+            mine.on('boom', (senderMine, ...args) => {
+                this.emit('boom', senderMine, ...args);
             });
         });
     }
