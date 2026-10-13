@@ -7,3 +7,9 @@ export const MINE_EVENTS: Record<MineEvent, string> = {
     [MINE_EVENT_STATE_CHANGE]: MINE_EVENT_STATE_CHANGE,
     [MINE_EVENT_BOOM]: MINE_EVENT_BOOM,
 };
+
+export type MineFieldEvent = MineEvent;
+
+export const MINE_FIELD_EVENTS: Record<MineFieldEvent, string> = {
+    ...MINE_EVENTS,
+};

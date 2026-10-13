@@ -123,6 +123,13 @@ export class Mine extends EventHandler<MineEvent> {
 
     //#region Properties
 
+    public get rowId(): number {
+        return this.#rowId;
+    }
+    public get colId(): number {
+        return this.#colId;
+    }
+
     public get shouldEmitBoon(): boolean {
         return this.#shouldEmitBoom;
     }
