@@ -1,5 +1,5 @@
 import { EventHandler } from '../common/index.js';
-import { type MineFieldEvent } from './constants/events.js';
+import { type MineFieldEvent } from './utils/events.js';
 import { MineRow } from './mine-row.js';
 import { type Mine } from './mine.js';
 

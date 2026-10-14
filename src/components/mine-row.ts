@@ -4,7 +4,7 @@ import {
     MINE_ROW_PREFIX,
     SIZE_MAX,
     MINE_ROW_BASE_CLASS,
-} from './constants/index.js';
+} from './utils/index.js';
 import { Mine } from './mine.js';
 
 export class MineRow extends EventHandler<MineEvent> {

@@ -8,7 +8,7 @@ import {
     MINE_BOMB_CLASS,
     MINE_NEIGHBOR_CLASSES,
     MINE_PREFIX,
-} from './constants/index.js';
+} from './utils/index.js';
 
 //#region ローカル型やローカル定数
 /**

@@ -9,7 +9,7 @@ import {
     after,
 } from 'node:test';
 import assert from 'node:assert/strict';
-import { MINE_STATES } from '../../../src/components/constants/index.js';
+import { MINE_STATES } from '../../../src/components/utils/index.js';
 import { Mine } from '../../../src/components/mine.js';
 import {
     mockDocument,
