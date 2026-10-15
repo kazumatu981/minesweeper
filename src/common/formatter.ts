@@ -4,9 +4,10 @@ function _format(
     separator: string,
     ...args: (string | number)[]
 ) {
-    const body = [...args].map((arg) => arg.toString()).join(separator);
-    return [prefix, body, suffix]
+    // const body = [...args].map((arg) => arg.toString()).join(separator);
+    return [prefix, ...args, suffix]
         .filter((s) => s !== undefined)
+        .map((v) => v.toString())
         .join(separator);
 }
 

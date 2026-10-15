@@ -37,7 +37,7 @@
   --neighbor-9: #c43d3d;
 }
 
-.___mine_row {
+.___mine_row_base {
   display: flex;
   flex-direction: row;
   align-items: center;

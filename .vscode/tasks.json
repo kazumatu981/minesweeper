@@ -1,0 +1,62 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-ui-components",
+            "type": "process",
+            "command": "npm.cmd",
+            "args": [
+                "run",
+                "test:build-ui-components"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "open-mine-debug-browser",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\.vscode\\start-edge-debug.ps1",
+                "http://127.0.0.1:3000/__tests__/ui-components/mine/mine.html?vscode-livepreview=true"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "open-mine-field-debug-browser",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}\\.vscode\\start-edge-debug.ps1",
+                "http://127.0.0.1:3000/__tests__/ui-components/mine/mine-field.html?vscode-livepreview=true"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "debug-mine",
+            "dependsOn": [
+                "build-ui-components",
+                "open-mine-debug-browser"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "debug-mine-field",
+            "dependsOn": [
+                "build-ui-components",
+                "open-mine-field-debug-browser"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
+    ]
+}

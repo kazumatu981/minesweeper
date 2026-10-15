@@ -6,6 +6,7 @@
     "type": "module",
     "scripts": {
         "lint": "eslint .",
+        "test:build-ui-components": "node bin/ui-components.test.build.mjs",
         "test:unit": "node --import tsx --test __tests__/**/*.test.ts",
         "test:unit-coverage": "node --import tsx --test --experimental-test-coverage __tests__/**/*.test.ts"
     },
