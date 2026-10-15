@@ -1,4 +1,4 @@
-import { __assertBetween, EventHandler, formatId } from '../common/index.js';
+import { __assertBetween, EventHandler } from '../common/index.js';
 
 import {
     type MineState,
@@ -7,7 +7,7 @@ import {
     MINE_STATE_CLASSES,
     MINE_BOMB_CLASS,
     MINE_NEIGHBOR_CLASSES,
-    MINE_PREFIX,
+    formatMineId,
 } from './utils/index.js';
 
 //#region ローカル型やローカル定数
@@ -211,7 +211,7 @@ export class Mine extends EventHandler<MineEvent> {
      * idを参照する
      */
     get id(): string {
-        return formatId(MINE_PREFIX, undefined, this.#rowId, this.#colId);
+        return formatMineId(this.#rowId, this.#colId);
     }
 
     /**
@@ -232,8 +232,8 @@ export class Mine extends EventHandler<MineEvent> {
         this.neighborCount = value;
     }
 
-    setBomb() {
-        this.isBomb = true;
+    setBomb(value: boolean = true) {
+        this.isBomb = value;
     }
     touch() {
         this.isTouched = true;
@@ -259,7 +259,7 @@ export class Mine extends EventHandler<MineEvent> {
         this.on(
             'state-change',
             (thisObject: Mine) => {
-                thisObject.emit('boom');
+                thisObject.emit('bombed');
             },
             (thisObject: Mine) => {
                 return thisObject.shouldEmitBoon && thisObject.state === 'bomb';

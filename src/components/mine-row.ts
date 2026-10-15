@@ -1,9 +1,9 @@
-import { __assertBetween, EventHandler, formatId } from '../common/index.js';
+import { __assertBetween, EventHandler } from '../common/index.js';
 import {
     type MineEvent,
-    MINE_ROW_PREFIX,
     SIZE_MAX,
     MINE_ROW_BASE_CLASS,
+    formatMineRowId,
 } from './utils/index.js';
 import { Mine } from './mine.js';
 
@@ -14,10 +14,10 @@ export class MineRow extends EventHandler<MineEvent> {
     readonly #size;
 
     constructor(rowId: number, size: number) {
-        super();
-
         __assertBetween(size, 0, SIZE_MAX);
         __assertBetween(rowId, 0, size - 1);
+
+        super();
 
         this.#rowId = rowId;
         this.#size = size;
@@ -32,7 +32,7 @@ export class MineRow extends EventHandler<MineEvent> {
     }
 
     get id(): string {
-        return formatId(MINE_ROW_PREFIX, undefined, this.#rowId);
+        return formatMineRowId(this.#rowId);
     }
 
     get mines() {
@@ -61,8 +61,8 @@ export class MineRow extends EventHandler<MineEvent> {
             mine.on('state-change', (senderMine, ...args) => {
                 this.emit('state-change', senderMine, ...args);
             });
-            mine.on('boom', (senderMine, ...args) => {
-                this.emit('boom', senderMine, ...args);
+            mine.on('bombed', (senderMine, ...args) => {
+                this.emit('bombed', senderMine, ...args);
             });
         });
     }
