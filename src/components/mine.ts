@@ -140,6 +140,9 @@ export class Mine extends EventHandler<MineEvent> {
         return formatMineId(this.#rowId, this.#colId);
     }
 
+    /**
+     * 状態
+     */
     public get state(): MineState {
         return this.#state;
     }
@@ -153,6 +156,7 @@ export class Mine extends EventHandler<MineEvent> {
     set __unsafeState(value: MineState) {
         this.#state = value;
     }
+
     /**
      * DOM要素の参照
      */
