@@ -3,9 +3,12 @@
     "version": "1.0.0",
     "description": "HTML + JavaScript Minesweeper app.",
     "main": "index.js",
+    "type": "module",
     "scripts": {
-        "test:unit": "node --test app/__tests__/unit/**/*.test.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "lint": "eslint .",
+        "test:build-ui-components": "node bin/ui-components.test.build.mjs",
+        "test:unit": "node --import tsx --test __tests__/**/*.test.ts",
+        "test:unit-coverage": "node --import tsx --test --experimental-test-coverage __tests__/**/*.test.ts"
     },
     "repository": {
         "type": "git",
@@ -24,7 +27,15 @@
     "homepage": "https://github.com/kazumatu981/minesweeper#readme",
     "devDependencies": {
         "@eslint/js": "latest",
+        "@types/jsdom": "^30.0.0",
+        "@types/node": "^26.6.3",
+        "esbuild": "^0.28.2",
         "eslint": "latest",
-        "globals": "latest"
+        "globals": "latest",
+        "jiti": "^2.7.0",
+        "jsdom": "^30.1.0",
+        "tsx": "^4.23.15",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.71.0"
     }
 }

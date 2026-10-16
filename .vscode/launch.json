@@ -5,11 +5,40 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "コンポーネントテストのデバッグ",
-            "request": "launch",
+            "name": "Mine コンポーネントテストのデバッグ",
+            "request": "attach",
             "type": "msedge",
-            "url": "http://127.0.0.1:3000/app/__tests__/components/index.html?vscode-livepreview=true",
-            "webRoot": "${workspaceFolder}"
+            "address": "127.0.0.1",
+            "port": 9223,
+            "urlFilter": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine.html*",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "debug-mine"
+        },
+        {
+            "name": "MineField コンポーネントテストのデバッグ",
+            "request": "attach",
+            "type": "msedge",
+            "address": "127.0.0.1",
+            "port": 9223,
+            "urlFilter": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine-field.html*",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "debug-mine-field"
+        },
+        {
+            "name": "Mine コンポーネントテストのデバッグ（VS Code内蔵ブラウザー）",
+            "request": "launch",
+            "type": "editor-browser",
+            "url": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine.html?vscode-livepreview=true",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "build-ui-components"
+        },
+        {
+            "name": "MineField コンポーネントテストのデバッグ（VS Code内蔵ブラウザー）",
+            "request": "launch",
+            "type": "editor-browser",
+            "url": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine-field.html?vscode-livepreview=true",
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "build-ui-components"
         }
     ]
 }
