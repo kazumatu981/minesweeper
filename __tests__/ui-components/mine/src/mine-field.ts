@@ -11,7 +11,7 @@ function onPageLoad() {
     const testPanel = document.getElementById('testPanel');
 
     const field = new MineField({
-        size: 5,
+        size: 10,
         mineCount: 10,
     });
 

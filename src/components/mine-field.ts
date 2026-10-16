@@ -1,5 +1,9 @@
 import { EventHandler, createRandom } from '../common/index.js';
-import { type MineFieldEvent, MINE_FIELD_BASE_CLASS } from './utils/index.js';
+import {
+    type MineFieldEvent,
+    MINE_FIELD_BASE_CLASS,
+    formatMineFieldId,
+} from './utils/index.js';
 import { MineRow } from './mine-row.js';
 import { type Mine } from './mine.js';
 
@@ -28,16 +32,18 @@ export interface MineFieldOptions {
 
 export class MineField extends EventHandler<MineFieldEvent> {
     #options: MineFieldOptions;
-    #rows: MineRow[];
-    #element: HTMLDivElement;
+    #rows: MineRow[] = [];
+    readonly #element: HTMLDivElement;
 
     constructor(options: MineFieldOptions) {
         super();
 
         this.#options = options;
-        this.#rows = this.#generateRows();
-        this.#element = this.#buildDomTree();
-        this.#setMines();
+        this.#element = this.#generateRoot();
+
+        this.resetField(options.size, options.mineCount);
+
+        this.on('opened', this.onOpened.bind(this));
     }
 
     get size(): number {
@@ -48,6 +54,9 @@ export class MineField extends EventHandler<MineFieldEvent> {
         return this.#rows;
     }
 
+    get mines(): Mine[] {
+        return this.#rows.flatMap((row) => row.mines);
+    }
     get element(): HTMLDivElement {
         return this.#element;
     }
@@ -56,15 +65,35 @@ export class MineField extends EventHandler<MineFieldEvent> {
         return this.#rows[rowId]!.mines[colId]!;
     }
 
-    resize(size: number, mineCount: number) {
+    resetField(size: number, mineCount: number) {
         this.#options.size = size;
         this.#options.mineCount = mineCount;
 
+        // 行をセットする
         this.#rows = this.#generateRows();
-        this.#element = this.#buildDomTree();
+
+        // 爆弾をセットする
         this.#setMines();
+
+        // イベントをセットする
+        this.#setEvents();
     }
 
+    onOpened(thisField: MineField, senderMine: unknown) {
+        const neighbors = thisField.#getNeighborMines(senderMine as Mine);
+        neighbors.forEach((mine) => {
+            if (mine !== senderMine) {
+                mine.touch();
+            }
+        });
+    }
+
+    #generateRoot(): HTMLDivElement {
+        const fieldElement = document.createElement('div');
+        fieldElement.id = formatMineFieldId();
+        fieldElement.classList.add(MINE_FIELD_BASE_CLASS);
+        return fieldElement;
+    }
     #getNeighborMines(mine: Mine): Mine[] {
         const rowId = mine.rowId;
         const colId = mine.colId;
@@ -91,20 +120,17 @@ export class MineField extends EventHandler<MineFieldEvent> {
         return neighbors;
     }
     #generateRows(): MineRow[] {
+        // 行を作成する
         const rows: MineRow[] = Array.from({ length: this.#options.size }).map(
             (_, rowId) => new MineRow(rowId, this.#options.size)
         );
-        return rows;
-    }
-    #buildDomTree(): HTMLDivElement {
-        const fieldElement = document.createElement('div');
-        fieldElement.classList.add(MINE_FIELD_BASE_CLASS);
 
-        this.#rows.forEach((row) => {
-            fieldElement.appendChild(row.element);
+        this.element.replaceChildren();
+        rows.forEach((row) => {
+            this.element.appendChild(row.element);
         });
 
-        return fieldElement;
+        return rows;
     }
     #setMines() {
         const minePositions = createMines(
@@ -112,16 +138,24 @@ export class MineField extends EventHandler<MineFieldEvent> {
             this.#options.mineCount
         );
         minePositions.forEach(({ rowId, colId }) => {
-            this.mine(rowId, colId).setBomb();
+            this.mine(rowId, colId).isBomb = true;
         });
 
-        this.#rows
-            .flatMap((row) => row.mines)
-            .forEach((mine) => {
-                const neighborBombCount = this.#getNeighborMines(mine).filter(
-                    (m) => m.isBomb
-                ).length;
-                mine.setNeighborCount(neighborBombCount);
+        this.mines.forEach((mine) => {
+            const neighborBombCount = this.#getNeighborMines(mine).filter(
+                (m) => m.isBomb
+            ).length;
+            mine.neighborCount = neighborBombCount;
+        });
+    }
+    #setEvents() {
+        this.mines.forEach((mine) => {
+            mine.on('bombed', (thisMine, ...args) => {
+                this.emit('bombed', thisMine, ...args);
             });
+            mine.on('opened', (thisMine, ...args) => {
+                this.emit('opened', thisMine, ...args);
+            });
+        });
     }
 }

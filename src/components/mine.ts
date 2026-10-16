@@ -104,7 +104,6 @@ export class Mine extends EventHandler<MineEvent> {
     #state: MineState = 'closed';
     #neighborBombCount = 0;
     #isBomb = false;
-    #shouldEmitBoom = true;
     #isTouched = false;
 
     public constructor(rowId: number, colId: number) {
@@ -130,14 +129,6 @@ export class Mine extends EventHandler<MineEvent> {
         return this.#colId;
     }
 
-    public get shouldEmitBoon(): boolean {
-        return this.#shouldEmitBoom;
-    }
-    public set shouldEmitBoon(value: boolean) {
-        this.#shouldEmitBoom = value;
-    }
-
-    //#region クラス外からはReadOnlyなプロパティ
     public get state(): MineState {
         return this.#state;
     }
@@ -158,7 +149,7 @@ export class Mine extends EventHandler<MineEvent> {
     /**
      * 爆弾かどうかを設定する
      */
-    protected set isBomb(value: boolean) {
+    public set isBomb(value: boolean) {
         this.#isBomb = value;
     }
 
@@ -186,7 +177,7 @@ export class Mine extends EventHandler<MineEvent> {
     /**
      * 近隣の爆弾の数を設定する
      */
-    protected set neighborCount(value: number) {
+    public set neighborCount(value: number) {
         // 数値で範囲に収まっているか
         __assertBetween(value, 0, 9);
 
@@ -228,23 +219,21 @@ export class Mine extends EventHandler<MineEvent> {
 
     //#endregion
 
-    setNeighborCount(value: number) {
-        this.neighborCount = value;
-    }
-
-    setBomb(value: boolean = true) {
-        this.isBomb = value;
-    }
     touch() {
         this.isTouched = true;
         this.state = selectNextState['touch'][this.state](this);
     }
 
+    //#region Very Private Zone !!!!!! these methods are encapsulated
+    /**
+     * イベント登録
+     */
     #registerEvent() {
-        // DOM イベントの登録
+        // 右クリックの登録
         this.#element.addEventListener('click', () => {
             this.#onLeftClick();
         });
+        // 左クリックの登録
         this.#element.addEventListener('contextmenu', (domElement) => {
             domElement.preventDefault();
             this.#onRightClick();
@@ -255,15 +244,18 @@ export class Mine extends EventHandler<MineEvent> {
             thisObject.#adjustFace();
         });
 
-        // 爆弾判定の登録
+        // 爆弾通知
         this.on(
             'state-change',
-            (thisObject: Mine) => {
-                thisObject.emit('bombed');
-            },
-            (thisObject: Mine) => {
-                return thisObject.shouldEmitBoon && thisObject.state === 'bomb';
-            }
+            (thisObject: Mine) => thisObject.emit('bombed'),
+            (thisObject: Mine) => thisObject.state === 'bomb'
+        );
+
+        // 開封通知
+        this.on(
+            'state-change',
+            (thisObject: Mine) => thisObject.emit('opened'),
+            (thisObject: Mine) => thisObject.state === 'opened'
         );
     }
 
@@ -274,7 +266,7 @@ export class Mine extends EventHandler<MineEvent> {
         this.state = selectNextState['click'][this.state](this);
     }
     /**
-     * 右クリックの
+     * 右クリックのイベントハンドラ
      */
     #onRightClick() {
         this.state = selectNextState['rClick'][this.state](this);
@@ -292,4 +284,5 @@ export class Mine extends EventHandler<MineEvent> {
         this.element.textContent = this.text;
         this.element.classList.add(...this.classes);
     }
+    //#endregion
 }

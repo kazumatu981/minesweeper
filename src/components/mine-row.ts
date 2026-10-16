@@ -64,6 +64,9 @@ export class MineRow extends EventHandler<MineEvent> {
             mine.on('bombed', (senderMine, ...args) => {
                 this.emit('bombed', senderMine, ...args);
             });
+            mine.on('opened', (senderMine, ...args) => {
+                this.emit('opened', senderMine, ...args);
+            });
         });
     }
 }

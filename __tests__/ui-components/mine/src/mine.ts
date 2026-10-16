@@ -23,10 +23,10 @@ function onPageLoad() {
     testPanel1.appendChild(mine0_1.element);
     testPanel1.appendChild(mine0_2.element);
 
-    mine0_1.setNeighborCount(6);
+    mine0_1.neighborCount = 6;
     mine0_1.touch();
 
-    mine0_2.setBomb();
+    mine0_2.isBomb = true;
 
     [mine0_0, mine0_1, mine0_2].forEach((mine) => {
         mine.on('state-change', (thisMine) => {
@@ -42,7 +42,7 @@ function onPageLoad() {
     const _mines1 = Array.from({ length: 10 }).map((_, index) => {
         const mine = new Mine(1, index);
 
-        mine.setNeighborCount(index);
+        mine.neighborCount = index;
         mine.touch();
 
         testPanel2.appendChild(mine.element);
