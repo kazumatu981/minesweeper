@@ -43,14 +43,18 @@ type UiEventStateDecisionTable<T> = Record<UiEvent, StateDecisionTable<T>>;
  */
 const selectClasses: StateDecisionTable<string[]> = {
     closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
+    mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
+    mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
+    opened: (mine) => [
+        MINE_BASE_CLASS,
+        MINE_STATE_CLASSES.opened,
+        MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
+    ],
     touched: (mine) => [
         MINE_BASE_CLASS,
         MINE_STATE_CLASSES.touched,
         MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
     ],
-    mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
-    mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
-    opened: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.opened],
     bomb: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.bomb, MINE_BOMB_CLASS],
 };
 /**
@@ -58,10 +62,12 @@ const selectClasses: StateDecisionTable<string[]> = {
  */
 const selectText: StateDecisionTable<string> = {
     closed: (_) => ' ',
-    touched: (mine) => mine.neighborCount.toString(),
     mayBe: (_) => '?',
     mustBe: (_) => 'F',
-    opened: (_) => ' ',
+    opened: (mine) =>
+        mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+    touched: (mine) =>
+        mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
     bomb: (_) => 'B',
 };
 /**
@@ -69,28 +75,28 @@ const selectText: StateDecisionTable<string> = {
  */
 const selectNextState: UiEventStateDecisionTable<MineState> = {
     touch: {
-        closed: (_) => 'touched',
-        touched: (_) => 'touched',
+        closed: (mine) => (mine.isBomb ? 'closed' : 'touched'),
         mayBe: (_) => 'mayBe',
         mustBe: (_) => 'mustBe',
         opened: (_) => 'opened',
         bomb: (_) => 'bomb',
+        touched: (_) => 'touched',
     },
     rClick: {
         closed: (_) => 'mustBe',
-        touched: (_) => 'mustBe',
-        mayBe: (mine) => (mine.isTouched ? 'touched' : 'closed'),
         mustBe: (_) => 'mayBe',
+        mayBe: (_) => 'closed',
         opened: (_) => 'opened',
         bomb: (_) => 'bomb',
+        touched: (_) => 'touched',
     },
     click: {
         closed: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
-        touched: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
         mayBe: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
         mustBe: (_) => 'mustBe',
         opened: (_) => 'opened',
         bomb: (_) => 'bomb',
+        touched: (_) => 'touched',
     },
 };
 //#endregion
@@ -104,7 +110,6 @@ export class Mine extends EventHandler<MineEvent> {
     #state: MineState = 'closed';
     #neighborBombCount = 0;
     #isBomb = false;
-    #isTouched = false;
 
     public constructor(rowId: number, colId: number) {
         // 親クラスのコンストラクタ
@@ -128,16 +133,31 @@ export class Mine extends EventHandler<MineEvent> {
     public get colId(): number {
         return this.#colId;
     }
+    /**
+     * idを参照する
+     */
+    get id(): string {
+        return formatMineId(this.#rowId, this.#colId);
+    }
 
     public get state(): MineState {
         return this.#state;
     }
-    protected set state(value: MineState) {
+    private set state(value: MineState) {
         // 以前の値と異なる場合のみ値をセットする
         if (this.#state !== value) {
             this.#state = value;
             this.emit('state-change');
         }
+    }
+    set __unsafeState(value: MineState) {
+        this.#state = value;
+    }
+    /**
+     * DOM要素の参照
+     */
+    get element(): HTMLElement {
+        return this.#element;
     }
 
     /**
@@ -151,21 +171,6 @@ export class Mine extends EventHandler<MineEvent> {
      */
     public set isBomb(value: boolean) {
         this.#isBomb = value;
-    }
-
-    /**
-     * チェックされたかどうかを取得する
-     */
-    public get isTouched(): boolean {
-        return this.#isTouched;
-    }
-    /**
-     * チェックされたかどうかを設定する
-     */
-    protected set isTouched(value: boolean) {
-        if (this.#isTouched !== value) {
-            this.#isTouched = value;
-        }
     }
 
     /**
@@ -198,29 +203,11 @@ export class Mine extends EventHandler<MineEvent> {
         return selectText[this.state](this);
     }
 
-    /**
-     * idを参照する
-     */
-    get id(): string {
-        return formatMineId(this.#rowId, this.#colId);
-    }
-
-    /**
-     * DOM要素の参照
-     */
-    get element(): HTMLElement {
-        return this.#element;
-    }
-
-    set __unsafeState(value: MineState) {
-        this.state = value;
-    }
     //#endregion
 
     //#endregion
 
     touch() {
-        this.isTouched = true;
         this.state = selectNextState['touch'][this.state](this);
     }
 
