@@ -1,26 +1,40 @@
 import { EventHandler } from './event-handler.js';
-import {
-    type IStateMachine,
-    type DecisionTableDictionary,
-} from './decision-table.js';
+
+type Resolver<TIn, TOut> = (x: TIn) => TOut;
+
+export interface IStateMachine<TState> {
+    get state(): TState;
+}
+
+export type DecisionTable<
+    TState extends string,
+    TObject extends IStateMachine<TState>,
+    TOut,
+> = {
+    [K in TState]: Resolver<TObject, TOut>;
+};
+
+export type DecisionTableDictionary<
+    TKey extends string,
+    TState extends string,
+    TObject extends IStateMachine<TState>,
+> = {
+    [K in TKey]: DecisionTable<TState, TObject, TState>;
+};
+
 export type StateMachineEvents = 'state-change';
 
 export abstract class StateMachine<
-    TEvents extends StateMachineEvents,
+    TEvents,
     TState extends string,
     TAction extends string,
 >
-    extends EventHandler<TEvents>
+    extends EventHandler<TEvents | StateMachineEvents>
     implements IStateMachine<TState>
 {
     #state: TState;
 
-    abstract selectNextState: DecisionTableDictionary<
-        TAction,
-        TState,
-        StateMachine<TEvents, TState, TAction>,
-        TState
-    >;
+    abstract transitionTable: DecisionTableDictionary<TAction, TState, this>;
 
     constructor(state: TState) {
         super();
@@ -34,15 +48,11 @@ export abstract class StateMachine<
     protected set state(value: TState) {
         if (this.#state !== value) {
             this.#state = value;
-            this.emit('state-change' as TEvents);
+            this.emit('state-change');
         }
     }
 
-    public set __unsafeState(value: TState) {
-        this.#state = value;
-    }
-
     protected goNextState(action: TAction) {
-        this.state = this.selectNextState[action][this.state](this);
+        this.state = this.transitionTable[action][this.state](this);
     }
 }
