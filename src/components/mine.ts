@@ -1,4 +1,10 @@
-import { __assertBetween, EventHandler } from '../common/index.js';
+import {
+    __assertBetween,
+    StateMachine,
+    type DecisionTable,
+    type DecisionTableDictionary,
+    type StateAction,
+} from '../common/index.js';
 
 import {
     type MineState,
@@ -25,23 +31,15 @@ type UiEvent =
 //#region 状態やUIイベントをもとにした決定表
 //#region table types
 /**
- * Mineに関する述語関数
- */
-type MinePredicate<T> = (mine: Mine) => T;
-/**
  * Mineの状態に応じた述語関数決定テーブル
  */
-type StateDecisionTable<T> = Record<MineState, MinePredicate<T>>;
-/**
- * UIイベントとMineに応じた述語決定テーブル
- */
-type UiEventStateDecisionTable<T> = Record<UiEvent, StateDecisionTable<T>>;
+type StateDecisionTable<T> = DecisionTable<MineState, Mine, T>;
 //#endregion
 //#region table bodies
 /**
  * クラスの決定
  */
-const selectClasses: StateDecisionTable<string[]> = {
+const classesDecisionTable: StateDecisionTable<string[]> = {
     closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
     mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
     mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
@@ -60,7 +58,7 @@ const selectClasses: StateDecisionTable<string[]> = {
 /**
  * Mineのテキストの決定
  */
-const selectText: StateDecisionTable<string> = {
+const textDecisionTable: StateDecisionTable<string> = {
     closed: (_) => ' ',
     mayBe: (_) => '?',
     mustBe: (_) => 'F',
@@ -70,56 +68,74 @@ const selectText: StateDecisionTable<string> = {
         mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
     bomb: (_) => 'B',
 };
-/**
- * 次の状態の決定
- */
-const selectNextState: UiEventStateDecisionTable<MineState> = {
-    touch: {
-        closed: (mine) => (mine.isBomb ? 'closed' : 'touched'),
-        mayBe: (_) => 'mayBe',
-        mustBe: (_) => 'mustBe',
-        opened: (_) => 'opened',
-        bomb: (_) => 'bomb',
-        touched: (_) => 'touched',
-    },
-    rClick: {
-        closed: (_) => 'mustBe',
-        mustBe: (_) => 'mayBe',
-        mayBe: (_) => 'closed',
-        opened: (_) => 'opened',
-        bomb: (_) => 'bomb',
-        touched: (_) => 'touched',
-    },
-    click: {
-        closed: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
-        mayBe: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
-        mustBe: (_) => 'mustBe',
-        opened: (_) => 'opened',
-        bomb: (_) => 'bomb',
-        touched: (_) => 'touched',
-    },
-};
 //#endregion
 //#endregion
 //#endregion
 
-export class Mine extends EventHandler<MineEvent> {
+export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
     readonly #element: HTMLElement;
     readonly #rowId;
     readonly #colId;
-    #state: MineState = 'closed';
     #neighborBombCount = 0;
     #isBomb = false;
 
+    readonly transitionTable: DecisionTableDictionary<
+        UiEvent,
+        MineState,
+        this
+    > = {
+        touch: {
+            closed: (mine: Mine) => (mine.isBomb ? 'closed' : 'touched'),
+            mayBe: (_) => 'mayBe',
+            mustBe: (_) => 'mustBe',
+            opened: (_) => 'opened',
+            bomb: (_) => 'bomb',
+            touched: (_) => 'touched',
+        },
+        rClick: {
+            closed: (_) => 'mustBe',
+            mustBe: (_) => 'mayBe',
+            mayBe: (_) => 'closed',
+            opened: (_) => 'opened',
+            bomb: (_) => 'bomb',
+            touched: (_) => 'touched',
+        },
+        click: {
+            closed: (mine: Mine) => (mine.isBomb ? 'bomb' : 'opened'),
+            mayBe: (mine: Mine) => (mine.isBomb ? 'bomb' : 'opened'),
+            mustBe: (_) => 'mustBe',
+            opened: (_) => 'opened',
+            bomb: (_) => 'bomb',
+            touched: (_) => 'touched',
+        },
+    };
+
+    readonly stateActions: StateAction<this, MineState>[] = [
+        {
+            state: undefined,
+            action: (mine: Mine) => mine.#adjustFace(),
+        },
+        {
+            // 爆弾通知
+            state: 'bomb',
+            action: (mine: Mine) => mine.emit('bombed'),
+        },
+        {
+            // 開封通知
+            state: 'opened',
+            action: (mine: Mine) => mine.emit('opened'),
+        },
+    ];
+
     public constructor(rowId: number, colId: number) {
         // 親クラスのコンストラクタ
-        super();
+        super('closed');
         this.#rowId = rowId;
         this.#colId = colId;
 
         this.#element = document.createElement('div');
         this.#element.id = this.id;
-        this.#registerEvent();
+        this.registerEvent();
 
         // 表面を調整する
         this.#adjustFace();
@@ -138,23 +154,6 @@ export class Mine extends EventHandler<MineEvent> {
      */
     get id(): string {
         return formatMineId(this.#rowId, this.#colId);
-    }
-
-    /**
-     * 状態
-     */
-    public get state(): MineState {
-        return this.#state;
-    }
-    private set state(value: MineState) {
-        // 以前の値と異なる場合のみ値をセットする
-        if (this.#state !== value) {
-            this.#state = value;
-            this.emit('state-change');
-        }
-    }
-    set __unsafeState(value: MineState) {
-        this.#state = value;
     }
 
     /**
@@ -197,14 +196,14 @@ export class Mine extends EventHandler<MineEvent> {
      * CSSクラスを参照する
      */
     get classes(): string[] {
-        return selectClasses[this.state](this);
+        return classesDecisionTable[this.state](this);
     }
 
     /**
      * 表面テキストを参照する
      */
     get text(): string {
-        return selectText[this.state](this);
+        return textDecisionTable[this.state](this);
     }
 
     //#endregion
@@ -212,14 +211,14 @@ export class Mine extends EventHandler<MineEvent> {
     //#endregion
 
     touch() {
-        this.state = selectNextState['touch'][this.state](this);
+        this.goNextState('touch');
     }
 
     //#region Very Private Zone !!!!!! these methods are encapsulated
     /**
      * イベント登録
      */
-    #registerEvent() {
+    override registerEvent() {
         // 右クリックの登録
         this.#element.addEventListener('click', () => {
             this.#onLeftClick();
@@ -230,37 +229,21 @@ export class Mine extends EventHandler<MineEvent> {
             this.#onRightClick();
         });
 
-        // スタイル変更イベントの登録
-        this.on('state-change', (thisObject: Mine) => {
-            thisObject.#adjustFace();
-        });
-
-        // 爆弾通知
-        this.on(
-            'state-change',
-            (thisObject: Mine) => thisObject.emit('bombed'),
-            (thisObject: Mine) => thisObject.state === 'bomb'
-        );
-
-        // 開封通知
-        this.on(
-            'state-change',
-            (thisObject: Mine) => thisObject.emit('opened'),
-            (thisObject: Mine) => thisObject.state === 'opened'
-        );
+        // ステート変更イベントの登録
+        super.registerEvent();
     }
 
     /**
      * 左クリックのイベントハンドラ
      */
     #onLeftClick() {
-        this.state = selectNextState['click'][this.state](this);
+        this.goNextState('click');
     }
     /**
      * 右クリックのイベントハンドラ
      */
     #onRightClick() {
-        this.state = selectNextState['rClick'][this.state](this);
+        this.goNextState('rClick');
     }
 
     /**
