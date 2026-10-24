@@ -1,4 +1,8 @@
-import { EventHandler } from './event-handler.js';
+import {
+    EventHandler,
+    type EventPredicate,
+    type EventAction,
+} from './event-handler.js';
 
 //#region Decision Table
 /**
@@ -44,6 +48,27 @@ export type DecisionTableDictionary<
 export type StateMachineEvents = 'state-change';
 
 /**
+ * アクション定義
+ */
+export type StateAction<TIn extends IStateMachine<TState>, TState> = {
+    state: TState | TState[] | undefined;
+    action: EventAction<TIn>;
+};
+
+function toPredicate<TObject extends IStateMachine<TState>, TState>(
+    state: TState | TState[] | undefined
+): EventPredicate<TObject> | undefined {
+    if (state === undefined) {
+        return undefined;
+    }
+    if (Array.isArray(state)) {
+        return (o: TObject) => state.includes(o.state);
+    } else {
+        return (o: TObject) => o.state === state;
+    }
+}
+
+/**
  * ステートマシンに対する制約
  *
  * @typeParam TState - ステートマシンが現在保持する状態名の型。
@@ -73,6 +98,7 @@ export abstract class StateMachine<
     #state: TState;
 
     abstract transitionTable: DecisionTableDictionary<TAction, TState, this>;
+    abstract stateActions: StateAction<this, TState>[];
 
     constructor(state: TState) {
         super();
@@ -92,5 +118,11 @@ export abstract class StateMachine<
 
     protected goNextState(action: TAction) {
         this.state = this.transitionTable[action][this.state](this);
+    }
+
+    protected registerEvent() {
+        this.stateActions?.forEach((action) =>
+            this.on('state-change', action.action, toPredicate(action.state))
+        );
     }
 }

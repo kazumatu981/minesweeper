@@ -3,6 +3,7 @@ import {
     StateMachine,
     type DecisionTable,
     type DecisionTableDictionary,
+    type StateAction,
 } from '../common/index.js';
 
 import {
@@ -109,6 +110,23 @@ export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
         },
     };
 
+    readonly stateActions: StateAction<this, MineState>[] = [
+        {
+            state: undefined,
+            action: (mine: Mine) => mine.#adjustFace(),
+        },
+        {
+            // 爆弾通知
+            state: 'bomb',
+            action: (mine: Mine) => mine.emit('bombed'),
+        },
+        {
+            // 開封通知
+            state: 'opened',
+            action: (mine: Mine) => mine.emit('opened'),
+        },
+    ];
+
     public constructor(rowId: number, colId: number) {
         // 親クラスのコンストラクタ
         super('closed');
@@ -117,7 +135,7 @@ export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
 
         this.#element = document.createElement('div');
         this.#element.id = this.id;
-        this.#registerEvent();
+        this.registerEvent();
 
         // 表面を調整する
         this.#adjustFace();
@@ -200,7 +218,7 @@ export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
     /**
      * イベント登録
      */
-    #registerEvent() {
+    override registerEvent() {
         // 右クリックの登録
         this.#element.addEventListener('click', () => {
             this.#onLeftClick();
@@ -211,24 +229,8 @@ export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
             this.#onRightClick();
         });
 
-        // スタイル変更イベントの登録
-        this.on('state-change', (thisObject: Mine) => {
-            thisObject.#adjustFace();
-        });
-
-        // 爆弾通知
-        this.on(
-            'state-change',
-            (thisObject: Mine) => thisObject.emit('bombed'),
-            (thisObject: Mine) => thisObject.state === 'bomb'
-        );
-
-        // 開封通知
-        this.on(
-            'state-change',
-            (thisObject: Mine) => thisObject.emit('opened'),
-            (thisObject: Mine) => thisObject.state === 'opened'
-        );
+        // ステート変更イベントの登録
+        super.registerEvent();
     }
 
     /**
