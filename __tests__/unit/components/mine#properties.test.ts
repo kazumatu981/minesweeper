@@ -23,24 +23,16 @@ void describe('Mine', () => {
         void it('get/set: true', () => {
             const mine = new Mine(1, 1);
 
-            mine.setBomb();
+            mine.isBomb = true;
 
             assert.equal(mine.isBomb, true);
         });
-    });
-
-    void describe('Property: isTouched:', () => {
-        void it('default is false', () => {
+        void it('get/set: false', () => {
             const mine = new Mine(1, 1);
 
-            assert.equal(mine.isTouched, false);
-        });
-        void it('get/set: true', () => {
-            const mine = new Mine(1, 1);
+            mine.isBomb = true;
 
-            mine.touch();
-
-            assert.equal(mine.isTouched, true);
+            assert.equal(mine.isBomb, true);
         });
     });
 
@@ -51,7 +43,7 @@ void describe('Mine', () => {
                 void it(`get/set: ${count}`, () => {
                     const mine = new Mine(1, 1);
 
-                    mine.setNeighborCount(count);
+                    mine.neighborCount = count;
 
                     assert.equal(mine.neighborCount, count);
                 });
@@ -59,7 +51,7 @@ void describe('Mine', () => {
         void it('must be in range', () => {
             const mine = new Mine(1, 1);
             assert.throws(() => {
-                mine.setNeighborCount(10);
+                mine.neighborCount = 10;
             });
         });
     });

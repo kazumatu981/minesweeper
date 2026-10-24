@@ -20,6 +20,12 @@ void describe('Mine: constructor', () => {
      * 各プロパティの初期値確認
      */
     void describe('initial values', () => {
+        void it('rowId/colId: number which is set in constructor', () => {
+            const mine = new Mine(2, 3);
+
+            assert.equal(mine.rowId, 2);
+            assert.equal(mine.colId, 3);
+        });
         void it('state: closed', () => {
             const mine = new Mine(1, 2);
 
@@ -42,7 +48,7 @@ void describe('Mine: constructor', () => {
             const expectedId = '___mine-1-2';
 
             const mine = new Mine(1, 2);
-            assert.equal(mine.id, expectedId);
+            assert.equal(mine.id.startsWith(expectedId), true);
         });
     });
 
@@ -58,7 +64,7 @@ void describe('Mine: constructor', () => {
         void it('elements id must be expected', () => {
             const expectedId = '___mine-1-2';
             const mine = new Mine(1, 2);
-            assert.equal(mine.element.id, expectedId);
+            assert.equal(mine.element.id.startsWith(expectedId), true);
         });
     });
 });

@@ -1,5 +1,5 @@
-type EventAction<T> = (thisObject: T, ...args: unknown[]) => void;
-type EventPredicate<T> = (thisObject: T, ...args: unknown[]) => boolean;
+export type EventAction<T> = (thisObject: T, ...args: unknown[]) => void;
+export type EventPredicate<T> = (thisObject: T, ...args: unknown[]) => boolean;
 
 interface EventHandlerElement<T> {
     action: EventAction<T>;

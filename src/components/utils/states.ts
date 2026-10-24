@@ -1,16 +1,16 @@
 const MINE_STATE_CLOSED = 'closed';
-const MINE_STATE_TOUCHED = 'touched';
 const MINE_STATE_MUST_BE_BOMB = 'mustBe';
 const MINE_STATE_MAY_BE_BOMB = 'mayBe';
+const MINE_STATE_TOUCHED = 'touched';
 const MINE_STATE_OPENED = 'opened';
 const MINE_STATE_BOMB = 'bomb';
 
 export type MineState =
     | 'closed'
-    | 'touched'
     | 'mustBe'
     | 'mayBe'
     | 'opened'
+    | 'touched'
     | 'bomb';
 
 export const MINE_STATES: Record<MineState, string> = {
@@ -18,10 +18,6 @@ export const MINE_STATES: Record<MineState, string> = {
      * MINEが閉じている
      */
     closed: MINE_STATE_CLOSED,
-    /**
-     * MINEは閉じているが評価された状態
-     */
-    touched: MINE_STATE_TOUCHED,
     /**
      * BOMBだと思ってフラグを付けている状態
      */
@@ -34,6 +30,10 @@ export const MINE_STATES: Record<MineState, string> = {
      * MINEが開いている
      */
     opened: MINE_STATE_OPENED,
+    /**
+     * MINEがtouchであけられた状態
+     */
+    touched: MINE_STATE_TOUCHED,
     /**
      * MINEが開いていてBOMBの状態
      */
