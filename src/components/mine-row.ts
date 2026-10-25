@@ -24,7 +24,6 @@ export class MineRow extends EventHandler<MineEvent> {
 
         this.#mines = this.#generateMines();
         this.#element = this.#buildDomTree();
-        this.#proxyEvents();
     }
 
     get element(): HTMLElement {
@@ -54,19 +53,5 @@ export class MineRow extends EventHandler<MineEvent> {
             root.appendChild(item.element);
         });
         return root;
-    }
-
-    #proxyEvents() {
-        this.#mines.forEach((mine) => {
-            mine.on('state-change', (senderMine, ...args) => {
-                this.emit('state-change', senderMine, ...args);
-            });
-            mine.on('bombed', (senderMine, ...args) => {
-                this.emit('bombed', senderMine, ...args);
-            });
-            mine.on('opened', (senderMine, ...args) => {
-                this.emit('opened', senderMine, ...args);
-            });
-        });
     }
 }

@@ -20,7 +20,7 @@ import {
 /**
  * UIイベント定義
  */
-type UiEvent =
+type MineAction =
     /** タッチした */
     | 'touch'
     /** 右クリックした */
@@ -72,7 +72,7 @@ const textDecisionTable: StateDecisionTable<string> = {
 //#endregion
 //#endregion
 
-export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
+export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
     readonly #element: HTMLElement;
     readonly #rowId;
     readonly #colId;
@@ -80,7 +80,7 @@ export class Mine extends StateMachine<MineEvent, MineState, UiEvent> {
     #isBomb = false;
 
     readonly transitionTable: DecisionTableDictionary<
-        UiEvent,
+        MineAction,
         MineState,
         this
     > = {

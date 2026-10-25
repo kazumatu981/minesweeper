@@ -1,11 +1,19 @@
-import { EventHandler, createRandom } from '../common/index.js';
+import {
+    StateMachine,
+    StateAction,
+    type DecisionTableDictionary,
+    createRandom,
+} from '../common/index.js';
 import {
     type MineFieldEvent,
+    type MineFieldState,
     MINE_FIELD_BASE_CLASS,
     formatMineFieldId,
 } from './utils/index.js';
 import { MineRow } from './mine-row.js';
 import { type Mine } from './mine.js';
+
+type MineFieldAction = 'open-mine' | 'fail' | 'reset';
 
 interface MinePosition {
     rowId: number;
@@ -30,13 +38,50 @@ export interface MineFieldOptions {
     mineCount: number;
 }
 
-export class MineField extends EventHandler<MineFieldEvent> {
+export class MineField extends StateMachine<
+    MineFieldEvent,
+    MineFieldState,
+    MineFieldAction
+> {
     #options: MineFieldOptions;
     #rows: MineRow[] = [];
     readonly #element: HTMLDivElement;
 
+    readonly transitionTable: DecisionTableDictionary<
+        MineFieldAction,
+        MineFieldState,
+        this
+    > = {
+        'open-mine': {
+            initialized: (field) => (field.isEnded ? 'ended' : 'started'),
+            started: (field) => (field.isEnded ? 'ended' : 'started'),
+            ended: (_) => 'ended',
+        },
+        fail: {
+            initialized: (_) => 'ended',
+            started: (_) => 'ended',
+            ended: (_) => 'ended',
+        },
+        reset: {
+            initialized: (_) => 'initialized',
+            started: (_) => 'initialized',
+            ended: (_) => 'initialized',
+        },
+    };
+
+    readonly stateActions: StateAction<this, MineFieldState>[] = [
+        {
+            state: 'ended',
+            action: (field) => field.emit('bombed'),
+        },
+    ];
+
+    get isEnded(): boolean {
+        // TODO
+        return false;
+    }
     constructor(options: MineFieldOptions) {
-        super();
+        super('initialized');
 
         this.#options = options;
         this.#element = this.#generateRoot();
