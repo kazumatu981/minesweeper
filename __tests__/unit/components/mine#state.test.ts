@@ -15,17 +15,17 @@ import {
 void describe('Mine state', () => {
     const onStateChangeMock = mock.fn();
     const onBombTouchMock = mock.fn();
-    const onOpenedMock = mock.fn();
+    const onResolvedMock = mock.fn();
 
     function mockEvents(mine: Mine): void {
         mine.on('state-change', onStateChangeMock);
         mine.on('bombed', onBombTouchMock);
-        mine.on('opened', onOpenedMock);
+        mine.on('resolved', onResolvedMock);
     }
     function resetCalls() {
         onStateChangeMock.mock.resetCalls();
         onBombTouchMock.mock.resetCalls();
-        onOpenedMock.mock.resetCalls();
+        onResolvedMock.mock.resetCalls();
     }
 
     function assertCalled(calledCount: Record<MineEvent, number>) {
@@ -34,7 +34,7 @@ void describe('Mine state', () => {
             calledCount['state-change']
         );
         assert.equal(onBombTouchMock.mock.calls.length, calledCount['bombed']);
-        assert.equal(onOpenedMock.mock.calls.length, calledCount['opened']);
+        assert.equal(onResolvedMock.mock.calls.length, calledCount['resolved']);
     }
 
     let mocker: Mocker;
@@ -59,7 +59,7 @@ void describe('Mine state', () => {
         // assert call count
         assertCalled({
             'state-change': 0,
-            opened: 0,
+            resolved: 0,
             bombed: 0,
         });
     });
@@ -77,7 +77,7 @@ void describe('Mine state', () => {
             // test call count
             assertCalled({
                 'state-change': 1,
-                opened: 0,
+                resolved: 1,
                 bombed: 0,
             });
         });
@@ -95,7 +95,7 @@ void describe('Mine state', () => {
             // test call count
             assertCalled({
                 'state-change': 0,
-                opened: 0,
+                resolved: 0,
                 bombed: 0,
             });
         });
@@ -112,7 +112,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 1,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
 
             // right click
@@ -121,7 +121,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 2,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
 
             // right click
@@ -130,7 +130,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 3,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
         });
         void it("cycle trough 'closed' --> 'mustBe' --> 'mayBe' --> 'closed' when is a bomb.", () => {
@@ -144,7 +144,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 1,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
 
             // right click
@@ -153,7 +153,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 2,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
 
             // right click
@@ -162,7 +162,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 3,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
         });
         void it('opened state, right click does nothing', () => {
@@ -179,7 +179,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 0,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
         });
         void it('bomb state, right click does nothing', () => {
@@ -197,7 +197,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 0,
                 bombed: 0,
-                opened: 0,
+                resolved: 0,
             });
         });
     });
@@ -212,7 +212,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.opened);
                 assertCalled({
                     'state-change': 1,
-                    opened: 1,
+                    resolved: 1,
                     bombed: 0,
                 });
             });
@@ -226,7 +226,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.bomb);
                 assertCalled({
                     'state-change': 1,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 1,
                 });
             });
@@ -244,7 +244,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.touched);
                 assertCalled({
                     'state-change': 0,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 0,
                 });
             });
@@ -263,7 +263,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.opened);
                 assertCalled({
                     'state-change': 1,
-                    opened: 1,
+                    resolved: 1,
                     bombed: 0,
                 });
             });
@@ -281,7 +281,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.bomb);
                 assertCalled({
                     'state-change': 1,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 1,
                 });
             });
@@ -299,7 +299,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.mustBe);
                 assertCalled({
                     'state-change': 0,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 0,
                 });
             });
@@ -316,7 +316,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.mustBe);
                 assertCalled({
                     'state-change': 0,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 0,
                 });
             });
@@ -335,7 +335,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.bomb);
                 assertCalled({
                     'state-change': 0,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 0,
                 });
             });
@@ -353,7 +353,7 @@ void describe('Mine state', () => {
                 assert.equal(mine.state, MINE_STATES.opened);
                 assertCalled({
                     'state-change': 0,
-                    opened: 0,
+                    resolved: 0,
                     bombed: 0,
                 });
             });

@@ -1,4 +1,8 @@
 import { type StateMachineEvents } from '../../common/index.js';
 
-export type MineEvent = StateMachineEvents | 'bombed' | 'opened';
-export type MineFieldEvent = StateMachineEvents | 'score_changed' | 'bombed';
+export type MineEvent = StateMachineEvents | 'bombed' | 'opened' | 'resolved';
+export type MineFieldEvent =
+    | StateMachineEvents
+    | 'score-changed'
+    | 'resolved'
+    | 'bombed';

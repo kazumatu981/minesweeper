@@ -122,7 +122,12 @@ export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
         },
         {
             // 開封通知
-            state: 'opened',
+            state: ['opened', 'touched'],
+            action: (mine: Mine) => mine.emit('resolved'),
+        },
+        {
+            // 開封通知
+            state: ['opened'],
             action: (mine: Mine) => mine.emit('opened'),
         },
     ];

@@ -43,11 +43,13 @@ export const MINE_STATES: Record<MineState, string> = {
 const MINE_FIELD_STATE_INITIALIZED = 'initialized';
 const MINE_FIELD_STATE_STARED = 'started';
 const MINE_FIELD_STATE_ENDED = 'ended';
+const MINE_FIELD_STATE_FAILED = 'failed';
 
-export type MineFieldState = 'initialized' | 'started' | 'ended';
+export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
 
 export const MINE_FIELD_STATES: Record<MineFieldState, string> = {
     [MINE_FIELD_STATE_INITIALIZED]: MINE_FIELD_STATE_INITIALIZED,
     [MINE_FIELD_STATE_STARED]: MINE_FIELD_STATE_STARED,
     [MINE_FIELD_STATE_ENDED]: MINE_FIELD_STATE_ENDED,
+    [MINE_FIELD_STATE_FAILED]: MINE_FIELD_STATE_FAILED,
 } as const;
