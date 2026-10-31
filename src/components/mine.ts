@@ -18,7 +18,6 @@ import {
     formatMineId,
 } from './utils/index.js';
 
-//#region ローカル型やローカル定数
 /**
  * UIイベント定義
  */
@@ -30,49 +29,10 @@ type MineAction =
     /**クリックした */
     | 'click';
 
-//#region 状態やUIイベントをもとにした決定表
-//#region table types
 /**
  * Mineの状態に応じた述語関数決定テーブル
  */
-type StateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
-//#endregion
-//#region table bodies
-/**
- * クラスの決定
- */
-const classesDecisionTable: StateDecisionTable<string[]> = {
-    closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
-    mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
-    mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
-    opened: (mine) => [
-        MINE_BASE_CLASS,
-        MINE_STATE_CLASSES.opened,
-        MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
-    ],
-    touched: (mine) => [
-        MINE_BASE_CLASS,
-        MINE_STATE_CLASSES.touched,
-        MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
-    ],
-    bomb: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.bomb, MINE_BOMB_CLASS],
-};
-/**
- * Mineのテキストの決定
- */
-const textDecisionTable: StateDecisionTable<string> = {
-    closed: (_) => ' ',
-    mayBe: (_) => '?',
-    mustBe: (_) => 'F',
-    opened: (mine) =>
-        mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
-    touched: (mine) =>
-        mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
-    bomb: (_) => 'B',
-};
-//#endregion
-//#endregion
-//#endregion
+type MineStateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
 
 export class Mine
     extends UiComponentBase<MineEvent>
@@ -81,9 +41,46 @@ export class Mine
     readonly #rowId;
     readonly #colId;
     readonly #sateMachine: StateMachine<MineState, MineAction, Mine>;
+
     #neighborBombCount = 0;
     #isBomb = false;
 
+    /**
+     * クラスの決定
+     */
+    readonly classesDecisionTable: MineStateDecisionTable<string[]> = {
+        closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
+        mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
+        mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
+        opened: (mine) => [
+            MINE_BASE_CLASS,
+            MINE_STATE_CLASSES.opened,
+            MINE_NEIGHBOR_CLASSES[mine.#neighborBombCount]!,
+        ],
+        touched: (mine) => [
+            MINE_BASE_CLASS,
+            MINE_STATE_CLASSES.touched,
+            MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
+        ],
+        bomb: (_) => [
+            MINE_BASE_CLASS,
+            MINE_STATE_CLASSES.bomb,
+            MINE_BOMB_CLASS,
+        ],
+    };
+    /**
+     * Mineのテキストの決定
+     */
+    readonly textDecisionTable: MineStateDecisionTable<string> = {
+        closed: (_) => ' ',
+        mayBe: (_) => '?',
+        mustBe: (_) => 'F',
+        opened: (mine) =>
+            mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+        touched: (mine) =>
+            mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+        bomb: (_) => 'B',
+    };
     readonly transitionTable: DecisionTableDictionary<
         MineAction,
         MineState,
@@ -154,8 +151,6 @@ export class Mine
         this.#rowId = rowId;
         this.#colId = colId;
 
-        this.registerEvent();
-
         // 表面を調整する
         this.#adjustFace();
     }
@@ -205,14 +200,14 @@ export class Mine
      * CSSクラスを参照する
      */
     get classes(): string[] {
-        return classesDecisionTable[this.#sateMachine.state](this);
+        return this.classesDecisionTable[this.#sateMachine.state](this);
     }
 
     /**
      * 表面テキストを参照する
      */
     get text(): string {
-        return textDecisionTable[this.#sateMachine.state](this);
+        return this.textDecisionTable[this.#sateMachine.state](this);
     }
 
     //#endregion
@@ -223,45 +218,28 @@ export class Mine
         this.#sateMachine.goNextState('touch', this);
     }
 
-    //#region Very Private Zone !!!!!! these methods are encapsulated
-    /**
-     * イベント登録
-     */
-    registerEvent() {
-        // 右クリックの登録
-        this.element.addEventListener('click', () => {
-            this.#onLeftClick();
-        });
-        // 左クリックの登録
-        this.element.addEventListener('contextmenu', (domElement) => {
-            domElement.preventDefault();
-            this.#onRightClick();
-        });
-    }
-
     /**
      * 左クリックのイベントハンドラ
      */
-    #onLeftClick() {
+    override onLeftClick() {
         this.#sateMachine.goNextState('click', this);
     }
     /**
      * 右クリックのイベントハンドラ
      */
-    #onRightClick() {
+    override onRightClick() {
         this.#sateMachine.goNextState('rClick', this);
     }
 
+    //#region private methods
     /**
      * テキストとスタイルの調整
      */
     #adjustFace() {
-        // 表面テキストとクラスをクリア
-        this.element.textContent = ' ';
-        this.element.classList.remove(...this.element.classList);
-
         // テキストを設定
         this.element.textContent = this.text;
+        // クラスを設定
+        this.element.classList.remove(...this.element.classList);
         this.element.classList.add(...this.classes);
     }
     //#endregion
