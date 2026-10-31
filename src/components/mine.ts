@@ -4,6 +4,7 @@ import {
     type DecisionTable,
     type DecisionTableDictionary,
     type StateAction,
+    type StateControllable,
     UiComponentBase,
 } from '../common/index.js';
 
@@ -73,17 +74,20 @@ const textDecisionTable: StateDecisionTable<string> = {
 //#endregion
 //#endregion
 
-export class Mine extends UiComponentBase<MineEvent> {
+export class Mine
+    extends UiComponentBase<MineEvent>
+    implements StateControllable<MineState, MineAction, Mine>
+{
     readonly #rowId;
     readonly #colId;
-    readonly #sateMachine: StateMachine<MineState, MineAction, this>;
+    readonly #sateMachine: StateMachine<MineState, MineAction, Mine>;
     #neighborBombCount = 0;
     #isBomb = false;
 
     readonly transitionTable: DecisionTableDictionary<
         MineAction,
         MineState,
-        this
+        Mine
     > = {
         touch: {
             closed: (mine: Mine) => (mine.isBomb ? 'closed' : 'touched'),
@@ -111,10 +115,14 @@ export class Mine extends UiComponentBase<MineEvent> {
         },
     };
 
-    readonly stateActions: StateAction<this, MineState>[] = [
+    readonly stateActions: StateAction<MineState, Mine>[] = [
         {
             state: undefined,
             action: (mine: Mine) => mine.#adjustFace(),
+        },
+        {
+            state: undefined,
+            action: (mine: Mine) => mine.emit('state-change'),
         },
         {
             // 爆弾通知
@@ -139,11 +147,9 @@ export class Mine extends UiComponentBase<MineEvent> {
             id: formatMineId(rowId, colId),
             classes: [],
         });
-        this.#sateMachine = new StateMachine(
+        this.#sateMachine = new StateMachine<MineState, MineAction, Mine>(
             'closed',
-            this,
-            this.transitionTable,
-            this.stateActions
+            this
         );
         this.#rowId = rowId;
         this.#colId = colId;
@@ -230,11 +236,6 @@ export class Mine extends UiComponentBase<MineEvent> {
         this.element.addEventListener('contextmenu', (domElement) => {
             domElement.preventDefault();
             this.#onRightClick();
-        });
-
-        // ステート変更イベントの登録
-        this.#sateMachine.on('state-change', () => {
-            this.emit('state-change');
         });
     }
 

@@ -1,6 +1,15 @@
+/**
+ * eventを実行するイベントハンドラ
+ */
 export type EventAction<T> = (thisObject: T, ...args: unknown[]) => void;
+/**
+ * eventを実行すべきかどうかを判定する判定関数
+ */
 export type EventPredicate<T> = (thisObject: T, ...args: unknown[]) => boolean;
 
+/**
+ * event定義本体
+ */
 interface EventHandlerElement<T> {
     action: EventAction<T>;
     when: EventPredicate<T> | undefined;
