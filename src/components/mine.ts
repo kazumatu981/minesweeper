@@ -4,6 +4,7 @@ import {
     type DecisionTable,
     type DecisionTableDictionary,
     type StateAction,
+    UiComponentBase,
 } from '../common/index.js';
 
 import {
@@ -33,7 +34,7 @@ type MineAction =
 /**
  * Mineの状態に応じた述語関数決定テーブル
  */
-type StateDecisionTable<T> = DecisionTable<MineState, Mine, T>;
+type StateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
 //#endregion
 //#region table bodies
 /**
@@ -72,10 +73,10 @@ const textDecisionTable: StateDecisionTable<string> = {
 //#endregion
 //#endregion
 
-export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
-    readonly #element: HTMLElement;
+export class Mine extends UiComponentBase<MineEvent> {
     readonly #rowId;
     readonly #colId;
+    readonly #sateMachine: StateMachine<MineState, MineAction, this>;
     #neighborBombCount = 0;
     #isBomb = false;
 
@@ -134,12 +135,19 @@ export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
 
     public constructor(rowId: number, colId: number) {
         // 親クラスのコンストラクタ
-        super('closed');
+        super({
+            id: formatMineId(rowId, colId),
+            classes: [],
+        });
+        this.#sateMachine = new StateMachine(
+            'closed',
+            this,
+            this.transitionTable,
+            this.stateActions
+        );
         this.#rowId = rowId;
         this.#colId = colId;
 
-        this.#element = document.createElement('div');
-        this.#element.id = this.id;
         this.registerEvent();
 
         // 表面を調整する
@@ -154,20 +162,10 @@ export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
     public get colId(): number {
         return this.#colId;
     }
-    /**
-     * idを参照する
-     */
-    get id(): string {
-        return formatMineId(this.#rowId, this.#colId);
-    }
 
-    /**
-     * DOM要素の参照
-     */
-    get element(): HTMLElement {
-        return this.#element;
+    public get state(): MineState {
+        return this.#sateMachine.state;
     }
-
     /**
      * 爆弾かどうかを取得する
      */
@@ -201,14 +199,14 @@ export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
      * CSSクラスを参照する
      */
     get classes(): string[] {
-        return classesDecisionTable[this.state](this);
+        return classesDecisionTable[this.#sateMachine.state](this);
     }
 
     /**
      * 表面テキストを参照する
      */
     get text(): string {
-        return textDecisionTable[this.state](this);
+        return textDecisionTable[this.#sateMachine.state](this);
     }
 
     //#endregion
@@ -216,39 +214,38 @@ export class Mine extends StateMachine<MineEvent, MineState, MineAction> {
     //#endregion
 
     touch() {
-        this.goNextState('touch');
+        this.#sateMachine.goNextState('touch', this);
     }
 
     //#region Very Private Zone !!!!!! these methods are encapsulated
     /**
      * イベント登録
      */
-    override registerEvent() {
+    registerEvent() {
         // 右クリックの登録
-        this.#element.addEventListener('click', () => {
+        this.element.addEventListener('click', () => {
             this.#onLeftClick();
         });
         // 左クリックの登録
-        this.#element.addEventListener('contextmenu', (domElement) => {
+        this.element.addEventListener('contextmenu', (domElement) => {
             domElement.preventDefault();
             this.#onRightClick();
         });
 
         // ステート変更イベントの登録
-        super.registerEvent();
     }
 
     /**
      * 左クリックのイベントハンドラ
      */
     #onLeftClick() {
-        this.goNextState('click');
+        this.#sateMachine.goNextState('click', this);
     }
     /**
      * 右クリックのイベントハンドラ
      */
     #onRightClick() {
-        this.goNextState('rClick');
+        this.#sateMachine.goNextState('rClick', this);
     }
 
     /**

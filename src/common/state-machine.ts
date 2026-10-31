@@ -19,13 +19,10 @@ type Resolver<TIn, TOut> = (x: TIn) => TOut;
  * @typeParam TObject - 決定関数に渡すステートマシンの型。
  * @typeParam TOut - 決定関数が返す値の型。
  */
-export type DecisionTable<
-    TState extends string,
-    TObject extends IStateMachine<TState>,
-    TOut,
-> = {
-    [K in TState]: Resolver<TObject, TOut>;
+export type DecisionTable<TState extends string, TOut, TActionTo> = {
+    [K in TState]: Resolver<TActionTo, TOut>;
 };
+
 /**
  * アクションごとの決定テーブルを保持する辞書。
  *
@@ -36,9 +33,9 @@ export type DecisionTable<
 export type DecisionTableDictionary<
     TKey extends string,
     TState extends string,
-    TObject extends IStateMachine<TState>,
+    TActionTo,
 > = {
-    [K in TKey]: DecisionTable<TState, TObject, TState>;
+    [K in TKey]: DecisionTable<TState, TState, TActionTo>;
 };
 //#endregion
 
@@ -50,7 +47,7 @@ export type StateMachineEvents = 'state-change';
 /**
  * アクション定義
  */
-export type StateAction<TIn extends IStateMachine<TState>, TState> = {
+export type StateAction<TIn, TState> = {
     state: TState | TState[] | undefined;
     action: EventAction<TIn>;
 };
@@ -87,26 +84,40 @@ export interface IStateMachine<TState> {
  * @typeParam TState - 状態名の型。現在の状態と遷移先を表す。
  * @typeParam TAction - 状態遷移を起こすアクション名の型。
  */
-export abstract class StateMachine<
-    TEvents,
+export class StateMachine<
     TState extends string,
     TAction extends string,
+    TActionTo,
 >
-    extends EventHandler<TEvents | StateMachineEvents>
+    extends EventHandler<StateMachineEvents>
     implements IStateMachine<TState>
 {
     #state: TState;
+    #actionTo: TActionTo;
 
-    abstract transitionTable: DecisionTableDictionary<TAction, TState, this>;
-    abstract stateActions: StateAction<this, TState>[];
+    transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>;
+    stateActions: StateAction<TActionTo, TState>[];
 
-    constructor(state: TState) {
+    constructor(
+        initialState: TState,
+        actionTo: TActionTo,
+        transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>,
+        stateActions: StateAction<TActionTo, TState>[]
+    ) {
         super();
-        this.#state = state;
+        this.#state = initialState;
+        this.#actionTo = actionTo;
+        this.transitionTable = transitionTable;
+        this.stateActions = stateActions;
+        this.registerEvent();
     }
 
     get state(): TState {
         return this.#state;
+    }
+
+    goNextState(action: TAction, actionTo: TActionTo) {
+        this.state = this.transitionTable[action][this.state](actionTo);
     }
 
     protected set state(value: TState) {
@@ -116,13 +127,13 @@ export abstract class StateMachine<
         }
     }
 
-    protected goNextState(action: TAction) {
-        this.state = this.transitionTable[action][this.state](this);
-    }
-
     protected registerEvent() {
         this.stateActions?.forEach((action) =>
-            this.on('state-change', action.action, toPredicate(action.state))
+            this.on(
+                'state-change',
+                (_) => action.action(this.#actionTo),
+                toPredicate(action.state)
+            )
         );
     }
 }

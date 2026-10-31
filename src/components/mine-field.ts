@@ -28,7 +28,6 @@ export class MineField extends StateMachine<
 > {
     #options: MineFieldOptions;
     #rows: MineRow[] | undefined;
-    readonly #element: HTMLDivElement;
 
     readonly transitionTable: DecisionTableDictionary<
         MineFieldAction,
@@ -70,10 +69,12 @@ export class MineField extends StateMachine<
         return this.estimated + this.bombCount === this.size * this.size;
     }
     constructor(options: MineFieldOptions) {
-        super('initialized');
+        super('initialized', {
+            id: formatMineFieldId(),
+            classes: [MINE_FIELD_BASE_CLASS],
+        });
 
         this.#options = options;
-        this.#element = this.element;
 
         this.resetField(options.size, options.bombCount);
     }
@@ -91,16 +92,6 @@ export class MineField extends StateMachine<
 
     get mines(): Mine[] {
         return this.rows.flatMap((row) => row.mines);
-    }
-    get element(): HTMLDivElement {
-        if (!this.#element) {
-            const fieldElement = document.createElement('div');
-            fieldElement.id = formatMineFieldId();
-            fieldElement.classList.add(MINE_FIELD_BASE_CLASS);
-            return fieldElement;
-        } else {
-            return this.#element;
-        }
     }
 
     get estimated(): number {
