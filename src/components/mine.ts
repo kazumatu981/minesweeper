@@ -233,6 +233,9 @@ export class Mine extends UiComponentBase<MineEvent> {
         });
 
         // ステート変更イベントの登録
+        this.#sateMachine.on('state-change', () => {
+            this.emit('state-change');
+        });
     }
 
     /**
