@@ -5,4 +5,5 @@ export * from './formatter.js';
 export * from './random.js';
 export * from './state-machine.js';
 export * from './ui-component-base.js';
+export * from './ui-component-with-children-base.js';
 export * from './decision-table.js';

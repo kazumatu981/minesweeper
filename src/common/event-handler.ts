@@ -17,7 +17,7 @@ interface EventHandlerElement<T> {
 /**
  * イベントを管理する基底クラス。 本プロジェクトで活用する部品はこれを継承して作成すること。
  */
-export class EventHandler<TEvents> {
+export class EventHandler<TEvents extends string> {
     readonly #events: Map<TEvents, EventHandlerElement<this>[]> = new Map();
 
     //#region メソッド
