@@ -1,9 +1,34 @@
+import { __assertBetween } from './assert.js';
+
+/**
+ * 座標
+ */
 export interface Coordinate {
     x: number;
     y: number;
 }
 
+/**
+ * 対象座標が矩形の範囲内にあることを確認する
+ * @param coordinate 検査対象座標
+ * @param size 矩形サイズ
+ */
+export function __assertCoordinateInRange(
+    coordinate: Coordinate,
+    size: number
+): void {
+    __assertBetween(coordinate.x, 0, size - 1);
+    __assertBetween(coordinate.y, 0, size - 1);
+}
+
+/**
+ * 中心座標の周辺座標を取得する
+ * @param center 中心の座標
+ * @param size 矩形サイズ
+ * @returns 中心座標の周辺
+ */
 export function getNeighbor(center: Coordinate, size: number): Coordinate[] {
+    __assertCoordinateInRange(center, size);
     return [
         { x: -1, y: -1 },
         { x: 0, y: -1 },
