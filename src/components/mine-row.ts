@@ -1,4 +1,7 @@
-import { __assertBetween, EventHandler } from '../common/index.js';
+import {
+    __assertBetween,
+    UiComponentWithChildrenBase,
+} from '../common/index.js';
 import {
     type MineEvent,
     SIZE_MAX,
@@ -7,66 +10,42 @@ import {
 } from './utils/index.js';
 import { Mine } from './mine.js';
 
-export class MineRow extends EventHandler<MineEvent> {
-    readonly #element: HTMLElement;
-    readonly #mines: Mine[];
+export interface MineRowConfig {
+    rowId: number;
+    size: number;
+}
+
+export class MineRow extends UiComponentWithChildrenBase<
+    MineEvent,
+    MineEvent,
+    Mine
+> {
     readonly #rowId;
     readonly #size;
 
-    constructor(rowId: number, size: number) {
+    constructor(MineRowConfig: MineRowConfig) {
+        const { rowId, size } = MineRowConfig;
         __assertBetween(size, 0, SIZE_MAX);
         __assertBetween(rowId, 0, size - 1);
 
-        super();
-
+        super({
+            id: formatMineRowId(rowId),
+            classes: [MINE_ROW_BASE_CLASS],
+            childrenCount: size,
+            generateChild: (colId) => new Mine(rowId, colId),
+        });
         this.#rowId = rowId;
         this.#size = size;
-
-        this.#mines = this.#generateMines();
-        this.#element = this.#buildDomTree();
-        this.#proxyEvents();
     }
 
-    get element(): HTMLElement {
-        return this.#element;
+    get rowId(): number {
+        return this.#rowId;
     }
 
-    get id(): string {
-        return formatMineRowId(this.#rowId);
+    get size(): number {
+        return this.#size;
     }
 
-    get mines() {
-        return this.#mines;
-    }
-
-    #generateMines(): Mine[] {
-        return Array.from({ length: this.#size }).map(
-            (_, colId) => new Mine(this.#rowId, colId)
-        );
-    }
-
-    #buildDomTree() {
-        const root = document.createElement('div');
-        root.id = this.id;
-        root.classList.add(MINE_ROW_BASE_CLASS);
-
-        this.#mines.forEach((item) => {
-            root.appendChild(item.element);
-        });
-        return root;
-    }
-
-    #proxyEvents() {
-        this.#mines.forEach((mine) => {
-            mine.on('state-change', (senderMine, ...args) => {
-                this.emit('state-change', senderMine, ...args);
-            });
-            mine.on('bombed', (senderMine, ...args) => {
-                this.emit('bombed', senderMine, ...args);
-            });
-            mine.on('opened', (senderMine, ...args) => {
-                this.emit('opened', senderMine, ...args);
-            });
-        });
-    }
+    onRightClick(): void {}
+    onLeftClick(): void {}
 }

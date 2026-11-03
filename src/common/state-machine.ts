@@ -4,43 +4,7 @@ import {
     type EventAction,
 } from './event-handler.js';
 
-//#region Decision Table
-/**
- * 入力値から出力値を決定する関数。
- *
- * @typeParam TIn - 決定関数に渡す入力の型。
- * @typeParam TOut - 決定関数が返す値の型。
- */
-type Resolver<TIn, TOut> = (x: TIn) => TOut;
-/**
- * 状態ごとの決定関数を保持するテーブル。
- *
- * @typeParam TState - テーブルのキーとなる状態名の型。
- * @typeParam TObject - 決定関数に渡すステートマシンの型。
- * @typeParam TOut - 決定関数が返す値の型。
- */
-export type DecisionTable<
-    TState extends string,
-    TObject extends IStateMachine<TState>,
-    TOut,
-> = {
-    [K in TState]: Resolver<TObject, TOut>;
-};
-/**
- * アクションごとの決定テーブルを保持する辞書。
- *
- * @typeParam TKey - 辞書のキーとなるアクション名の型。
- * @typeParam TState - 各決定テーブルのキーとなる状態名の型。
- * @typeParam TObject - 決定関数に渡すステートマシンの型。
- */
-export type DecisionTableDictionary<
-    TKey extends string,
-    TState extends string,
-    TObject extends IStateMachine<TState>,
-> = {
-    [K in TKey]: DecisionTable<TState, TObject, TState>;
-};
-//#endregion
+import { type DecisionTableDictionary } from './decision-table.js';
 
 /**
  * ステートマシンに最低限必要な「状態変化イベント」
@@ -50,21 +14,21 @@ export type StateMachineEvents = 'state-change';
 /**
  * アクション定義
  */
-export type StateAction<TIn extends IStateMachine<TState>, TState> = {
+export type StateAction<TState> = {
     state: TState | TState[] | undefined;
-    action: EventAction<TIn>;
+    action: EventAction;
 };
 
-function toPredicate<TObject extends IStateMachine<TState>, TState>(
+function is<TState, TObject extends IStateMachine<TState>>(
     state: TState | TState[] | undefined
-): EventPredicate<TObject> | undefined {
+): EventPredicate | undefined {
     if (state === undefined) {
         return undefined;
     }
     if (Array.isArray(state)) {
-        return (o: TObject) => state.includes(o.state);
+        return (o, ..._args) => state.includes((o as TObject).state);
     } else {
-        return (o: TObject) => o.state === state;
+        return (o, ..._args) => (o as TObject).state === state;
     }
 }
 
@@ -80,6 +44,15 @@ export interface IStateMachine<TState> {
     get state(): TState;
 }
 
+export interface StateControllable<
+    TState extends string,
+    TAction extends string,
+    TActionTo,
+> {
+    transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>;
+    stateActions: StateAction<TState>[];
+}
+
 /**
  * 状態遷移を管理する抽象ステートマシン。
  *
@@ -87,42 +60,53 @@ export interface IStateMachine<TState> {
  * @typeParam TState - 状態名の型。現在の状態と遷移先を表す。
  * @typeParam TAction - 状態遷移を起こすアクション名の型。
  */
-export abstract class StateMachine<
-    TEvents,
+export class StateMachine<
     TState extends string,
     TAction extends string,
+    TActionTo extends StateControllable<TState, TAction, TActionTo>,
 >
-    extends EventHandler<TEvents | StateMachineEvents>
+    extends EventHandler<StateMachineEvents>
     implements IStateMachine<TState>
 {
+    #initialState: TState;
     #state: TState;
+    #actionTo: TActionTo;
 
-    abstract transitionTable: DecisionTableDictionary<TAction, TState, this>;
-    abstract stateActions: StateAction<this, TState>[];
-
-    constructor(state: TState) {
+    constructor(initialState: TState, actionTo: TActionTo) {
         super();
-        this.#state = state;
+        this.#initialState = initialState;
+        this.#state = initialState;
+        this.#actionTo = actionTo;
+        this.registerEvent();
     }
 
     get state(): TState {
         return this.#state;
     }
 
+    reset(): void {
+        this.state = this.#initialState;
+    }
+
     protected set state(value: TState) {
         if (this.#state !== value) {
             this.#state = value;
-            this.emit('state-change');
+            this.emit('state-change', this);
         }
     }
 
-    protected goNextState(action: TAction) {
-        this.state = this.transitionTable[action][this.state](this);
+    goNextState(action: TAction, actionTo: TActionTo) {
+        this.state =
+            this.#actionTo.transitionTable[action][this.state](actionTo);
     }
 
     protected registerEvent() {
-        this.stateActions?.forEach((action) =>
-            this.on('state-change', action.action, toPredicate(action.state))
+        this.#actionTo.stateActions?.forEach((action) =>
+            this.on(
+                'state-change',
+                (_) => action.action(this.#actionTo),
+                is(action.state)
+            )
         );
     }
 }
