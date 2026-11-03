@@ -1,24 +1,74 @@
 /**
  * eventを実行するイベントハンドラ
  */
-export type EventAction<T> = (thisObject: T, ...args: unknown[]) => void;
+export type EventAction = (...args: unknown[]) => void;
 /**
  * eventを実行すべきかどうかを判定する判定関数
  */
-export type EventPredicate<T> = (thisObject: T, ...args: unknown[]) => boolean;
+export type EventPredicate = (...args: unknown[]) => boolean;
 
 /**
  * event定義本体
  */
-interface EventHandlerElement<T> {
-    action: EventAction<T>;
-    when: EventPredicate<T> | undefined;
+interface EventHandlerElement {
+    action: EventAction;
+    when: EventPredicate | undefined;
 }
+
+export interface EventHandlerEntry<TEvents extends string> {
+    eventName: TEvents;
+    elements: EventHandlerElement[];
+}
+
+export class EventHandlerMap<TEvents extends string> extends Map<
+    TEvents,
+    EventHandlerElement[]
+> {
+    append(eventName: TEvents, element: EventHandlerElement): void {
+        if (this.has(eventName)) {
+            const elements = this.get(eventName);
+            if (
+                elements!.find(
+                    (e) =>
+                        e.action === element.action && e.when === element.when
+                )
+            ) {
+                return;
+            }
+            this.get(eventName)!.push(element);
+        } else {
+            this.set(eventName, [element]);
+        }
+    }
+
+    emitFor(eventName: TEvents, ...args: unknown[]): void {
+        (this.get(eventName) ?? []).forEach((handlerDefine) => {
+            if (handlerDefine.when) {
+                if (handlerDefine.when(...args)) {
+                    handlerDefine.action(...args);
+                }
+            } else {
+                handlerDefine.action(...args);
+            }
+        });
+    }
+
+    static from<TEvents extends string>(
+        entries: EventHandlerEntry<TEvents>[]
+    ): EventHandlerMap<TEvents> {
+        const map = new EventHandlerMap<TEvents>();
+        entries.forEach((entry) => {
+            map.set(entry.eventName, entry.elements);
+        });
+        return map;
+    }
+}
+
 /**
  * イベントを管理する基底クラス。 本プロジェクトで活用する部品はこれを継承して作成すること。
  */
 export class EventHandler<TEvents extends string> {
-    readonly #events: Map<TEvents, EventHandlerElement<this>[]> = new Map();
+    readonly #events: EventHandlerMap<TEvents> = new EventHandlerMap();
 
     //#region メソッド
     /**
@@ -29,19 +79,8 @@ export class EventHandler<TEvents extends string> {
      * @param eventHandler - イベントハンドラ
      * @param when - event発生条件
      */
-    public on(
-        eventName: TEvents,
-        action: EventAction<this>,
-        when?: EventPredicate<this>
-    ) {
-        const element: EventHandlerElement<this> = { action, when };
-        if (this.#events.has(eventName)) {
-            //見つかった場合: 配列に eventHandlerを追加する
-            this.#events.get(eventName)!.push(element);
-        } else {
-            // 見つからなかった場合: 新しい配列を作成して eventHandlerを追加する
-            this.#events.set(eventName, [element]);
-        }
+    public on(eventName: TEvents, action: EventAction, when?: EventPredicate) {
+        this.#events.append(eventName, { action, when });
     }
 
     /**
@@ -53,17 +92,7 @@ export class EventHandler<TEvents extends string> {
      * @param args イベントに渡す引数
      */
     protected emit(eventName: TEvents, ...args: unknown[]) {
-        const handlerDefines = this.#events.get(eventName) ?? [];
-        // 見つかった場合: 配列の各要素に対して eventHandlerを実行する
-        for (const handlerDefine of handlerDefines) {
-            if (handlerDefine.when) {
-                if (handlerDefine.when(this, ...args)) {
-                    handlerDefine.action(this, ...args);
-                }
-            } else {
-                handlerDefine.action(this, ...args);
-            }
-        }
+        this.#events.emitFor(eventName, ...args);
     }
     //#endregion
 }

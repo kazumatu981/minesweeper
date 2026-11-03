@@ -31,6 +31,22 @@ export abstract class UiComponentBase<
         return this.element.id;
     }
 
+    set text(value: string) {
+        this.element.textContent = value;
+    }
+    get text(): string {
+        return this.element.textContent ?? ' ';
+    }
+
+    get classes(): string[] {
+        return Array.from(this.element.classList);
+    }
+
+    set classes(value: string[]) {
+        this.element.classList.remove(...this.element.classList);
+        this.element.classList.add(...value);
+    }
+
     abstract onRightClick(): void;
     abstract onLeftClick(): void;
 

@@ -5,18 +5,12 @@ import {
 
 export type ChildGenerator<T> = (index: number) => T;
 
-type EventMap<TParentEvent extends string, TChildEvent extends string> = {
-    [K in TChildEvent]: TParentEvent | undefined;
-};
-
 export interface UiComponentWithChildrenConfig<
-    TParentEvent extends string,
     TChildEvent extends string,
     TChild extends UiComponentBase<TChildEvent>,
 > extends UiComponentConfig {
     childrenCount: number;
     generateChild: ChildGenerator<TChild>;
-    eventMap?: EventMap<TParentEvent, TChildEvent>;
 }
 export abstract class UiComponentWithChildrenBase<
     TMyEvent extends string,
@@ -25,18 +19,13 @@ export abstract class UiComponentWithChildrenBase<
 > extends UiComponentBase<TMyEvent> {
     #children: TChild[] = [];
     readonly #generateChild: ChildGenerator<TChild>;
-    readonly #eventMap: EventMap<TMyEvent, TChildEvent> | undefined;
 
     constructor(
-        elementConfig: UiComponentWithChildrenConfig<
-            TMyEvent,
-            TChildEvent,
-            TChild
-        >
+        elementConfig: UiComponentWithChildrenConfig<TChildEvent, TChild>
     ) {
         super(elementConfig);
+
         this.#generateChild = elementConfig.generateChild;
-        this.#eventMap = elementConfig.eventMap;
 
         this.resetChildren(elementConfig.childrenCount);
     }
@@ -46,6 +35,7 @@ export abstract class UiComponentWithChildrenBase<
     }
 
     public resetChildren(childrenCount: number): void {
+        console.log(`resetChildren: ${childrenCount} children for ${this.id}`);
         this.#children = this.generateChildren(childrenCount);
     }
 
@@ -56,29 +46,9 @@ export abstract class UiComponentWithChildrenBase<
 
         this.element.replaceChildren();
 
-        this.children.forEach((child) => {
+        children.forEach((child) => {
             this.element.appendChild(child.element);
         });
-
-        if (this.#eventMap) {
-            // イベントを親にプロキシ
-            Object.keys(this.#eventMap).forEach((childEvent) => {
-                if (this.#eventMap![childEvent as TChildEvent]) {
-                    children.forEach((child) => {
-                        child.on(
-                            childEvent as TChildEvent,
-                            (thisChild, ...args) => {
-                                this.emit(
-                                    this.#eventMap![childEvent as TChildEvent]!,
-                                    thisChild,
-                                    ...args
-                                );
-                            }
-                        );
-                    });
-                }
-            });
-        }
 
         return children;
     }

@@ -14,21 +14,21 @@ export type StateMachineEvents = 'state-change';
 /**
  * アクション定義
  */
-export type StateAction<TState, TActionTo> = {
+export type StateAction<TState> = {
     state: TState | TState[] | undefined;
-    action: EventAction<TActionTo>;
+    action: EventAction;
 };
 
 function is<TState, TObject extends IStateMachine<TState>>(
     state: TState | TState[] | undefined
-): EventPredicate<TObject> | undefined {
+): EventPredicate | undefined {
     if (state === undefined) {
         return undefined;
     }
     if (Array.isArray(state)) {
-        return (o: TObject) => state.includes(o.state);
+        return (o, ..._args) => state.includes((o as TObject).state);
     } else {
-        return (o: TObject) => o.state === state;
+        return (o, ..._args) => (o as TObject).state === state;
     }
 }
 
@@ -50,7 +50,7 @@ export interface StateControllable<
     TActionTo,
 > {
     transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>;
-    stateActions: StateAction<TState, TActionTo>[];
+    stateActions: StateAction<TState>[];
 }
 
 /**
@@ -68,11 +68,13 @@ export class StateMachine<
     extends EventHandler<StateMachineEvents>
     implements IStateMachine<TState>
 {
+    #initialState: TState;
     #state: TState;
     #actionTo: TActionTo;
 
     constructor(initialState: TState, actionTo: TActionTo) {
         super();
+        this.#initialState = initialState;
         this.#state = initialState;
         this.#actionTo = actionTo;
         this.registerEvent();
@@ -82,10 +84,14 @@ export class StateMachine<
         return this.#state;
     }
 
+    reset(): void {
+        this.state = this.#initialState;
+    }
+
     protected set state(value: TState) {
         if (this.#state !== value) {
             this.#state = value;
-            this.emit('state-change');
+            this.emit('state-change', this);
         }
     }
 

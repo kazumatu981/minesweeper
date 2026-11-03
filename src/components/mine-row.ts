@@ -10,6 +10,11 @@ import {
 } from './utils/index.js';
 import { Mine } from './mine.js';
 
+export interface MineRowConfig {
+    rowId: number;
+    size: number;
+}
+
 export class MineRow extends UiComponentWithChildrenBase<
     MineEvent,
     MineEvent,
@@ -18,7 +23,8 @@ export class MineRow extends UiComponentWithChildrenBase<
     readonly #rowId;
     readonly #size;
 
-    constructor(rowId: number, size: number) {
+    constructor(MineRowConfig: MineRowConfig) {
+        const { rowId, size } = MineRowConfig;
         __assertBetween(size, 0, SIZE_MAX);
         __assertBetween(rowId, 0, size - 1);
 

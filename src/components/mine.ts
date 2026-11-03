@@ -34,6 +34,9 @@ type MineAction =
  */
 type MineStateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
 
+type MineTransitionTable = DecisionTableDictionary<MineAction, MineState, Mine>;
+type MineStateAction = StateAction<MineState>;
+
 export class Mine
     extends UiComponentBase<MineEvent>
     implements StateControllable<MineState, MineAction, Mine>
@@ -81,11 +84,7 @@ export class Mine
             mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
         bomb: (_) => 'B',
     };
-    readonly transitionTable: DecisionTableDictionary<
-        MineAction,
-        MineState,
-        Mine
-    > = {
+    readonly transitionTable: MineTransitionTable = {
         touch: {
             closed: (mine: Mine) => (mine.isBomb ? 'closed' : 'touched'),
             mayBe: (_) => 'mayBe',
@@ -112,29 +111,29 @@ export class Mine
         },
     };
 
-    readonly stateActions: StateAction<MineState, Mine>[] = [
+    readonly stateActions: MineStateAction[] = [
         {
             state: undefined,
-            action: (mine: Mine) => mine.#adjustFace(),
+            action: (mine) => (mine as Mine).#adjustFace(),
         },
         {
             state: undefined,
-            action: (mine: Mine) => mine.emit('state-change'),
+            action: (mine) => (mine as Mine).emit('state-change', mine),
         },
         {
             // 爆弾通知
             state: 'bomb',
-            action: (mine: Mine) => mine.emit('bombed'),
+            action: (mine) => (mine as Mine).emit('bombed', mine),
         },
         {
             // 開封通知
             state: ['opened', 'touched'],
-            action: (mine: Mine) => mine.emit('resolved'),
+            action: (mine) => (mine as Mine).emit('resolved', mine),
         },
         {
             // 開封通知
             state: ['opened'],
-            action: (mine: Mine) => mine.emit('opened'),
+            action: (mine) => (mine as Mine).emit('opened', mine),
         },
     ];
 
@@ -167,6 +166,7 @@ export class Mine
     public get state(): MineState {
         return this.#sateMachine.state;
     }
+
     /**
      * 爆弾かどうかを取得する
      */
@@ -196,25 +196,15 @@ export class Mine
         this.#neighborBombCount = value;
     }
 
-    /**
-     * CSSクラスを参照する
-     */
-    get classes(): string[] {
-        return this.classesDecisionTable[this.#sateMachine.state](this);
-    }
-
-    /**
-     * 表面テキストを参照する
-     */
-    get text(): string {
-        return this.textDecisionTable[this.#sateMachine.state](this);
-    }
-
     //#endregion
 
-    //#endregion
-
-    touch() {
+    public reset() {
+        this.#sateMachine.reset();
+        this.isBomb = false;
+        this.neighborCount = 0;
+        this.#adjustFace();
+    }
+    public touch() {
         this.#sateMachine.goNextState('touch', this);
     }
 
@@ -237,10 +227,9 @@ export class Mine
      */
     #adjustFace() {
         // テキストを設定
-        this.element.textContent = this.text;
+        this.text = this.textDecisionTable[this.#sateMachine.state](this);
         // クラスを設定
-        this.element.classList.remove(...this.element.classList);
-        this.element.classList.add(...this.classes);
+        this.classes = this.classesDecisionTable[this.#sateMachine.state](this);
     }
     //#endregion
 }
