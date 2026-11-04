@@ -55,3 +55,13 @@ export function getNeighbor(center: Coordinate, size: number): Coordinate[] {
             );
         });
 }
+
+/**
+ * 座標が同じかどうかを確認する
+ * @param v1 比較対象1の座標
+ * @param v2 比較対象2の座標
+ * @returns 座標が同じ場合はtrue、それ以外はfalse
+ */
+export function isCoordinateEqual(v1: Coordinate, v2: Coordinate): boolean {
+    return v1.x === v2.x && v1.y === v2.y;
+}

@@ -1,5 +1,12 @@
-import { type Coordinate } from './coordinate.js';
+import { type Coordinate, isCoordinateEqual } from './coordinate.js';
 
+/**
+ * 指定範囲内から、previous に含まれない整数をランダムに生成します。
+ * @param minimum 生成する整数の最小値（含む）
+ * @param maximum 生成する整数の最大値（含む）
+ * @param previous 除外する整数の一覧
+ * @returns 生成した整数
+ */
 export function createRandom(
     minimum: number,
     maximum: number,
@@ -14,9 +21,12 @@ export function createRandom(
     return result;
 }
 
-function isCoordinateEqual(v1: Coordinate, v2: Coordinate): boolean {
-    return v1.x === v2.x && v1.y === v2.y;
-}
+/**
+ * size × size の範囲から、重複しない座標をランダムに生成します。
+ * @param size 座標範囲の一辺のサイズ
+ * @param count 生成する座標の数
+ * @returns 生成した座標の配列
+ */
 export function createRandomCoordinates(
     size: number,
     count: number

@@ -1,4 +1,4 @@
-import { EventHandler } from './event-handler.js';
+import { EventDispatcher } from './events.js';
 
 export interface UiComponentConfig {
     tagName?: string;
@@ -8,7 +8,7 @@ export interface UiComponentConfig {
 
 export abstract class UiComponentBase<
     TEvent extends string,
-> extends EventHandler<TEvent> {
+> extends EventDispatcher<TEvent> {
     #element: HTMLElement;
 
     constructor(componentConfig: UiComponentConfig) {

@@ -2,6 +2,7 @@ import {
     type Coordinate,
     __assertCoordinateInRange,
     getNeighbor,
+    isCoordinateEqual,
 } from '../../../src/common/coordinate.js';
 
 import { describe, it } from 'node:test';
@@ -95,5 +96,28 @@ void describe('unittest: getNeighbor', () => {
             const result = getNeighbor(testCase.coordinate, testCase.size);
             assert.deepEqual(result, testCase.expected);
         });
+    });
+});
+
+void describe('unittest: isCoordinateEqual', () => {
+    void it('should return true when coordinates are equal', () => {
+        assert.equal(
+            isCoordinateEqual({ x: 1, y: 2 }, { x: 1, y: 2 }),
+            true
+        );
+    });
+
+    void it('should return false when x coordinates differ', () => {
+        assert.equal(
+            isCoordinateEqual({ x: 1, y: 2 }, { x: 2, y: 2 }),
+            false
+        );
+    });
+
+    void it('should return false when y coordinates differ', () => {
+        assert.equal(
+            isCoordinateEqual({ x: 1, y: 2 }, { x: 1, y: 3 }),
+            false
+        );
     });
 });

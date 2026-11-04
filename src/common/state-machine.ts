@@ -1,8 +1,8 @@
 import {
-    EventHandler,
+    EventDispatcher,
     type EventPredicate,
-    type EventAction,
-} from './event-handler.js';
+    type EventCallback,
+} from './events.js';
 
 import { type DecisionTableDictionary } from './decision-table.js';
 
@@ -16,10 +16,10 @@ export type StateMachineEvents = 'state-change';
  */
 export type StateAction<TState> = {
     state: TState | TState[] | undefined;
-    action: EventAction;
+    action: EventCallback;
 };
 
-function is<TState, TObject extends IStateMachine<TState>>(
+function is<TState, TObject extends StateMachineLike<TState>>(
     state: TState | TState[] | undefined
 ): EventPredicate | undefined {
     if (state === undefined) {
@@ -37,7 +37,7 @@ function is<TState, TObject extends IStateMachine<TState>>(
  *
  * @typeParam TState - ステートマシンが現在保持する状態名の型。
  */
-export interface IStateMachine<TState> {
+export interface StateMachineLike<TState> {
     /**
      * 状態を参照できること
      */
@@ -65,8 +65,8 @@ export class StateMachine<
     TAction extends string,
     TActionTo extends StateControllable<TState, TAction, TActionTo>,
 >
-    extends EventHandler<StateMachineEvents>
-    implements IStateMachine<TState>
+    extends EventDispatcher<StateMachineEvents>
+    implements StateMachineLike<TState>
 {
     #initialState: TState;
     #state: TState;
