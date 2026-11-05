@@ -14,43 +14,31 @@ export type StateMachineEvents = 'state-change';
 /**
  * アクション定義
  */
-export type StateAction<TState> = {
+export type StateActionHandler<TState> = {
     state: TState | TState[] | undefined;
     action: EventCallback;
 };
 
-function is<TState, TObject extends StateMachineLike<TState>>(
+export interface StateMachineContext<
+    TState extends string,
+    TAction extends string,
+    TActionTo,
+> {
+    transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>;
+    stateActionHandlers: StateActionHandler<TState>[];
+}
+
+function is<TState>(
     state: TState | TState[] | undefined
 ): EventPredicate | undefined {
     if (state === undefined) {
         return undefined;
     }
     if (Array.isArray(state)) {
-        return (o, ..._args) => state.includes((o as TObject).state);
+        return (o, ..._args) => state.includes((o as { state: TState }).state);
     } else {
-        return (o, ..._args) => (o as TObject).state === state;
+        return (o, ..._args) => (o as { state: TState }).state === state;
     }
-}
-
-/**
- * ステートマシンに対する制約
- *
- * @typeParam TState - ステートマシンが現在保持する状態名の型。
- */
-export interface StateMachineLike<TState> {
-    /**
-     * 状態を参照できること
-     */
-    get state(): TState;
-}
-
-export interface StateControllable<
-    TState extends string,
-    TAction extends string,
-    TActionTo,
-> {
-    transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>;
-    stateActions: StateAction<TState>[];
 }
 
 /**
@@ -63,20 +51,17 @@ export interface StateControllable<
 export class StateMachine<
     TState extends string,
     TAction extends string,
-    TActionTo extends StateControllable<TState, TAction, TActionTo>,
->
-    extends EventDispatcher<StateMachineEvents>
-    implements StateMachineLike<TState>
-{
+    TContext extends StateMachineContext<TState, TAction, TContext>,
+> extends EventDispatcher<StateMachineEvents> {
     #initialState: TState;
     #state: TState;
-    #actionTo: TActionTo;
+    #context: TContext;
 
-    constructor(initialState: TState, actionTo: TActionTo) {
+    constructor(initialState: TState, context: TContext) {
         super();
         this.#initialState = initialState;
         this.#state = initialState;
-        this.#actionTo = actionTo;
+        this.#context = context;
         this.registerEvent();
     }
 
@@ -95,16 +80,17 @@ export class StateMachine<
         }
     }
 
-    goNextState(action: TAction, actionTo: TActionTo) {
-        this.state =
-            this.#actionTo.transitionTable[action][this.state](actionTo);
+    applyAction(action: TAction) {
+        this.state = this.#context.transitionTable[action][this.state](
+            this.#context
+        );
     }
 
     protected registerEvent() {
-        this.#actionTo.stateActions?.forEach((action) =>
+        this.#context.stateActionHandlers?.forEach((action) =>
             this.on(
                 'state-change',
-                (_) => action.action(this.#actionTo),
+                (_) => action.action(this.#context),
                 is(action.state)
             )
         );

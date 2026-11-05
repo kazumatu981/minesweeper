@@ -3,8 +3,8 @@ import {
     StateMachine,
     type DecisionTable,
     type DecisionTableDictionary,
-    type StateAction,
-    type StateControllable,
+    type StateActionHandler,
+    type StateMachineContext,
     UiComponentBase,
 } from '../common/index.js';
 
@@ -35,11 +35,11 @@ type MineAction =
 type MineStateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
 
 type MineTransitionTable = DecisionTableDictionary<MineAction, MineState, Mine>;
-type MineStateAction = StateAction<MineState>;
+type MineStateAction = StateActionHandler<MineState>;
 
 export class Mine
     extends UiComponentBase<MineEvent>
-    implements StateControllable<MineState, MineAction, Mine>
+    implements StateMachineContext<MineState, MineAction, Mine>
 {
     readonly #rowId;
     readonly #colId;
@@ -111,7 +111,7 @@ export class Mine
         },
     };
 
-    readonly stateActions: MineStateAction[] = [
+    readonly stateActionHandlers: MineStateAction[] = [
         {
             state: undefined,
             action: (mine) => (mine as Mine).#adjustFace(),
@@ -205,20 +205,20 @@ export class Mine
         this.#adjustFace();
     }
     public touch() {
-        this.#sateMachine.goNextState('touch', this);
+        this.#sateMachine.applyAction('touch');
     }
 
     /**
      * 左クリックのイベントハンドラ
      */
     override onLeftClick() {
-        this.#sateMachine.goNextState('click', this);
+        this.#sateMachine.applyAction('click');
     }
     /**
      * 右クリックのイベントハンドラ
      */
     override onRightClick() {
-        this.#sateMachine.goNextState('rClick', this);
+        this.#sateMachine.applyAction('rClick');
     }
 
     //#region private methods

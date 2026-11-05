@@ -1,6 +1,6 @@
 import {
     StateMachine,
-    type StateAction,
+    type StateActionHandler,
     type DecisionTableDictionary,
     getNeighbor,
     createRandomCoordinates,
@@ -60,7 +60,7 @@ export class MineField extends UiComponentWithChildrenBase<
         },
     };
 
-    readonly stateActions: StateAction<MineFieldState>[] = [
+    readonly stateActionHandlers: StateActionHandler<MineFieldState>[] = [
         {
             state: 'ended',
             action: (field) => (field as MineField).emit('resolved', field),
@@ -130,11 +130,11 @@ export class MineField extends UiComponentWithChildrenBase<
         this.#options = { size, bombCount };
         this.#resetRows(true);
         // 爆弾をセットする
-        this.#stateMachine.goNextState('reset', this);
+        this.#stateMachine.applyAction('reset');
     }
 
     fail(_mine: Mine): void {
-        this.#stateMachine.goNextState('fail', this);
+        this.#stateMachine.applyAction('fail');
     }
     openMine(mine: Mine): void {
         this.#getNeighborMines(mine).forEach((m) => {
@@ -142,7 +142,7 @@ export class MineField extends UiComponentWithChildrenBase<
                 m.touch();
             }
         });
-        this.#stateMachine.goNextState('open-mine', this);
+        this.#stateMachine.applyAction('open-mine');
     }
 
     #resetRows(rebuild: boolean): void {

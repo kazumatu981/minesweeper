@@ -1,23 +1,14 @@
-import { formatId, createRandom } from '../../common/index.js';
+import { formatId, createRandomString } from '../../common/index.js';
 import { MINE_PREFIX, MINE_ROW_PREFIX, MINE_FIELD_PREFIX } from './prefixes.js';
 
 const CHARSET =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-function _createRandomSuffix(length: number): string {
-    return Array.from({ length })
-        .map(() => {
-            const randomIndex = createRandom(0, CHARSET.length - 1);
-            return CHARSET[randomIndex];
-        })
-        .join('');
-}
-
 function _formatIdForMineObject(
     prefix: string,
     ...args: (string | number)[]
 ): string {
-    return formatId(prefix, _createRandomSuffix(8), ...args);
+    return formatId(prefix, createRandomString(8, CHARSET), ...args);
 }
 
 export function formatMineId(rowId: number, fieldId: number): string {
