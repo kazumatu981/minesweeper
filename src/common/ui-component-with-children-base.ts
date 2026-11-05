@@ -35,7 +35,6 @@ export abstract class UiComponentWithChildrenBase<
     }
 
     public resetChildren(childrenCount: number): void {
-        console.log(`resetChildren: ${childrenCount} children for ${this.id}`);
         this.#children = this.generateChildren(childrenCount);
     }
 
