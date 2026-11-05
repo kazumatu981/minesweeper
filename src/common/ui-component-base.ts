@@ -29,7 +29,7 @@ export abstract class UiComponentBase<
      *
      * @param componentConfig - 要素のタグ名、ID、CSS クラスの設定です。
      */
-    constructor(componentConfig: UiComponentConfig) {
+    public constructor(componentConfig: UiComponentConfig) {
         super();
 
         const tagName = componentConfig.tagName ?? 'div';
@@ -45,32 +45,32 @@ export abstract class UiComponentBase<
     }
 
     /** コンポーネントの DOM 要素です。 */
-    get element(): HTMLElement {
+    public get element(): HTMLElement {
         return this.#element;
     }
 
     /** コンポーネントの DOM 要素の ID です。 */
-    get id(): string {
+    public get id(): string {
         return this.element.id;
     }
 
     /** コンポーネントの DOM 要素に設定するテキストです。 */
-    set text(value: string) {
+    public set text(value: string) {
         this.element.textContent = value;
     }
 
     /** コンポーネントの DOM 要素のテキストです。 */
-    get text(): string {
+    public get text(): string {
         return this.element.textContent ?? ' ';
     }
 
     /** コンポーネントの DOM 要素に設定されている CSS クラスです。 */
-    get classes(): string[] {
+    public get classes(): string[] {
         return Array.from(this.element.classList);
     }
 
     /** コンポーネントの DOM 要素に設定する CSS クラスです。 */
-    set classes(value: string[]) {
+    public set classes(value: string[]) {
         this.element.classList.remove(...this.element.classList);
         this.element.classList.add(...value);
     }
@@ -78,12 +78,12 @@ export abstract class UiComponentBase<
     /**
      * 右クリック時の処理を実装します。
      */
-    abstract onRightClick(): void;
+    protected abstract onRightClick(): void;
 
     /**
      * 左クリック時の処理を実装します。
      */
-    abstract onLeftClick(): void;
+    protected abstract onLeftClick(): void;
 
     #registerMouseEvent() {
         // 左クリックの登録

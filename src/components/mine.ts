@@ -51,7 +51,7 @@ export class Mine
     /**
      * クラスの決定
      */
-    readonly classesDecisionTable: MineStateDecisionTable<string[]> = {
+    public readonly classesDecisionTable: MineStateDecisionTable<string[]> = {
         closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
         mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
         mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
@@ -74,7 +74,7 @@ export class Mine
     /**
      * Mineのテキストの決定
      */
-    readonly textDecisionTable: MineStateDecisionTable<string> = {
+    public readonly textDecisionTable: MineStateDecisionTable<string> = {
         closed: (_) => ' ',
         mayBe: (_) => '?',
         mustBe: (_) => 'F',
@@ -84,7 +84,7 @@ export class Mine
             mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
         bomb: (_) => 'B',
     };
-    readonly transitionTable: MineTransitionTable = {
+    public readonly transitionTable: MineTransitionTable = {
         touch: {
             closed: (mine: Mine) => (mine.isBomb ? 'closed' : 'touched'),
             mayBe: (_) => 'mayBe',
@@ -111,7 +111,7 @@ export class Mine
         },
     };
 
-    readonly stateActionHandlers: MineStateAction[] = [
+    public readonly stateActionHandlers: MineStateAction[] = [
         {
             state: undefined,
             action: (mine) => (mine as Mine).#adjustFace(),
@@ -211,13 +211,13 @@ export class Mine
     /**
      * 左クリックのイベントハンドラ
      */
-    override onLeftClick() {
+    protected override onLeftClick() {
         this.#sateMachine.applyAction('click');
     }
     /**
      * 右クリックのイベントハンドラ
      */
-    override onRightClick() {
+    protected override onRightClick() {
         this.#sateMachine.applyAction('rClick');
     }
 

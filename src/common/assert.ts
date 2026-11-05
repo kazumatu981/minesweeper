@@ -6,7 +6,7 @@ export class AssertionError extends Error {
      * アサーションエラーのコンストラクタ
      * @param message メッセージ
      */
-    constructor(message: string) {
+    public constructor(message: string) {
         super(message);
         this.name = AssertionError.name;
     }

@@ -86,7 +86,7 @@ export class StateMachine<
      * @param initialState - ステートマシンの初期状態。
      * @param context - 状態遷移テーブルと状態別アクションを含むコンテキスト。
      */
-    constructor(initialState: TState, context: TContext) {
+    public constructor(initialState: TState, context: TContext) {
         super();
         this.#initialState = initialState;
         this.#state = initialState;
@@ -99,14 +99,14 @@ export class StateMachine<
      *
      * @returns 現在の状態。
      */
-    get state(): TState {
+    public get state(): TState {
         return this.#state;
     }
 
     /**
      * ステートマシンを初期状態に戻す。
      */
-    reset(): void {
+    public reset(): void {
         this.state = this.#initialState;
     }
 
@@ -127,7 +127,7 @@ export class StateMachine<
      *
      * @param action - 適用するアクション名。
      */
-    applyAction(action: TAction) {
+    public applyAction(action: TAction) {
         this.state = this.#context.transitionTable[action][this.state](
             this.#context
         );

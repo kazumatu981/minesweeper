@@ -35,7 +35,7 @@ export class MineField extends UiComponentWithChildrenBase<
         MineField
     >;
 
-    readonly transitionTable: DecisionTableDictionary<
+    public readonly transitionTable: DecisionTableDictionary<
         MineFieldAction,
         MineFieldState,
         this
@@ -60,18 +60,19 @@ export class MineField extends UiComponentWithChildrenBase<
         },
     };
 
-    readonly stateActionHandlers: StateActionHandler<MineFieldState>[] = [
-        {
-            state: 'ended',
-            action: (field) => (field as MineField).emit('resolved', field),
-        },
-        {
-            state: 'failed',
-            action: (field) => (field as MineField).emit('bombed', field),
-        },
-    ];
+    public readonly stateActionHandlers: StateActionHandler<MineFieldState>[] =
+        [
+            {
+                state: 'ended',
+                action: (field) => (field as MineField).emit('resolved', field),
+            },
+            {
+                state: 'failed',
+                action: (field) => (field as MineField).emit('bombed', field),
+            },
+        ];
 
-    constructor(options: MineFieldOptions) {
+    public constructor(options: MineFieldOptions) {
         super({
             id: formatMineFieldId(),
             classes: [MINE_FIELD_BASE_CLASS],
@@ -91,52 +92,52 @@ export class MineField extends UiComponentWithChildrenBase<
         this.#resetRows(false);
     }
 
-    get size(): number {
+    public get size(): number {
         return this.#options.size;
     }
-    get bombCount(): number {
+    public get bombCount(): number {
         return this.#options.bombCount;
     }
 
-    get rows(): readonly MineRow[] {
+    public get rows(): readonly MineRow[] {
         return this.children;
     }
 
-    get mines(): Mine[] {
+    public get mines(): Mine[] {
         return this.rows.flatMap((row) => row.children);
     }
 
-    get isEnded(): boolean {
+    private get isEnded(): boolean {
         return this.estimated.length + this.flagged.length === this.totalCount;
     }
 
-    get totalCount(): number {
+    public get totalCount(): number {
         return this.size * this.size;
     }
-    get flagged(): Mine[] {
+    public get flagged(): Mine[] {
         return this.mines.filter((mine) => mine.state === 'mustBe');
     }
-    get estimated(): Mine[] {
+    public get estimated(): Mine[] {
         return this.mines.filter(
             (mine) => mine.state === 'opened' || mine.state === 'touched'
         );
     }
 
-    mine(rowId: number, colId: number): Mine {
+    public mine(rowId: number, colId: number): Mine {
         return this.children[rowId]!.children[colId]!;
     }
 
-    resetField(size: number, bombCount: number): void {
+    public resetField(size: number, bombCount: number): void {
         this.#options = { size, bombCount };
         this.#resetRows(true);
         // 爆弾をセットする
         this.#stateMachine.applyAction('reset');
     }
 
-    fail(_mine: Mine): void {
+    public fail(_mine: Mine): void {
         this.#stateMachine.applyAction('fail');
     }
-    openMine(mine: Mine): void {
+    public openMine(mine: Mine): void {
         this.#getNeighborMines(mine).forEach((m) => {
             if (m !== mine) {
                 m.touch();
@@ -187,6 +188,6 @@ export class MineField extends UiComponentWithChildrenBase<
         );
     }
 
-    onRightClick(): void {}
-    onLeftClick(): void {}
+    protected override onRightClick(): void {}
+    protected override onLeftClick(): void {}
 }

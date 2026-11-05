@@ -7,16 +7,16 @@ import assert from 'node:assert/strict';
 import { mockDocument, restoreDocument } from '../util/document_mock.js';
 
 class TestChild extends UiComponentBase<'child'> {
-    constructor(index: number) {
+    public constructor(index: number) {
         super({
             id: `child-${index}`,
             classes: [],
         });
     }
 
-    override onRightClick(): void {}
+    protected override onRightClick(): void {}
 
-    override onLeftClick(): void {}
+    protected override onLeftClick(): void {}
 }
 
 class TestParent extends UiComponentWithChildrenBase<
@@ -24,9 +24,9 @@ class TestParent extends UiComponentWithChildrenBase<
     'child',
     TestChild
 > {
-    override onRightClick(): void {}
+    protected override onRightClick(): void {}
 
-    override onLeftClick(): void {}
+    protected override onLeftClick(): void {}
 }
 
 void describe('UiComponentWithChildrenBase', () => {

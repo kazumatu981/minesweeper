@@ -207,7 +207,7 @@ void describe('unittest: EventRegistry.from', () => {
 
 void describe('unittest: EventDispatcher', () => {
     class TestDispatcher extends EventDispatcher<'test'> {
-        fire(...args: unknown[]): void {
+        public fire(...args: unknown[]): void {
             this.emit('test', ...args);
         }
     }

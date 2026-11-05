@@ -14,14 +14,14 @@ import {
  * UI コンポーネントの共通基底クラスをテストするための具象クラスです。
  */
 class TestUiComponent extends UiComponentBase<'test'> {
-    readonly onRightClickMock = mock.fn();
-    readonly onLeftClickMock = mock.fn();
+    public readonly onRightClickMock = mock.fn();
+    public readonly onLeftClickMock = mock.fn();
 
-    override onRightClick(): void {
+    public override onRightClick(): void {
         this.onRightClickMock();
     }
 
-    override onLeftClick(): void {
+    protected override onLeftClick(): void {
         this.onLeftClickMock();
     }
 }
@@ -64,7 +64,10 @@ void describe('UiComponentBase', () => {
             classes: [],
         });
 
-        assert.equal(component.element instanceof mocker.dom.window.HTMLElement, true);
+        assert.equal(
+            component.element instanceof mocker.dom.window.HTMLElement,
+            true
+        );
         assert.equal(component.id, 'test-component');
     });
 

@@ -44,7 +44,7 @@ export abstract class UiComponentWithChildrenBase<
      *
      * @param elementConfig - DOM 要素と子コンポーネントの生成に使う設定です。
      */
-    constructor(
+    public constructor(
         elementConfig: UiComponentWithChildrenConfig<TChildEvent, TChild>
     ) {
         super(elementConfig);
@@ -55,7 +55,7 @@ export abstract class UiComponentWithChildrenBase<
     }
 
     /** このコンポーネントが持つ子コンポーネントの一覧です。 */
-    get children(): readonly TChild[] {
+    public get children(): readonly TChild[] {
         return this.#children;
     }
 

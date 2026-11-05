@@ -39,7 +39,7 @@ export class EventRegistry<TEvents extends string> extends Map<
      * @param eventName - イベント名
      * @param registration - 登録する処理と条件
      */
-    append(eventName: TEvents, registration: EventRegistration): void {
+    public append(eventName: TEvents, registration: EventRegistration): void {
         if (this.has(eventName)) {
             const registrations = this.get(eventName);
             if (
@@ -62,7 +62,7 @@ export class EventRegistry<TEvents extends string> extends Map<
      * @param eventName - イベント名
      * @param args - 処理と条件に渡す引数
      */
-    emitFor(eventName: TEvents, ...args: unknown[]): void {
+    public emitFor(eventName: TEvents, ...args: unknown[]): void {
         (this.get(eventName) ?? []).forEach((handlerDefine) => {
             if (handlerDefine.condition) {
                 if (handlerDefine.condition(...args)) {
@@ -78,7 +78,7 @@ export class EventRegistry<TEvents extends string> extends Map<
      * 登録情報の配列からイベントレジストリを作成する。
      * @param entries - イベント名と登録情報の配列
      */
-    static from<TEvents extends string>(
+    public static from<TEvents extends string>(
         entries: EventRegistryEntry<TEvents>[]
     ): EventRegistry<TEvents> {
         const map = new EventRegistry<TEvents>();

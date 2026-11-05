@@ -23,7 +23,7 @@ export class MineRow extends UiComponentWithChildrenBase<
     readonly #rowId;
     readonly #size;
 
-    constructor(MineRowConfig: MineRowConfig) {
+    public constructor(MineRowConfig: MineRowConfig) {
         const { rowId, size } = MineRowConfig;
         __assertBetween(size, 0, SIZE_MAX);
         __assertBetween(rowId, 0, size - 1);
@@ -38,14 +38,14 @@ export class MineRow extends UiComponentWithChildrenBase<
         this.#size = size;
     }
 
-    get rowId(): number {
+    public get rowId(): number {
         return this.#rowId;
     }
 
-    get size(): number {
+    public get size(): number {
         return this.#size;
     }
 
-    onRightClick(): void {}
-    onLeftClick(): void {}
+    protected override onRightClick(): void {}
+    protected override onLeftClick(): void {}
 }
