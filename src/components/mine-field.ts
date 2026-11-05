@@ -98,7 +98,7 @@ export class MineField extends UiComponentWithChildrenBase<
         return this.#options.bombCount;
     }
 
-    get rows(): MineRow[] {
+    get rows(): readonly MineRow[] {
         return this.children;
     }
 
