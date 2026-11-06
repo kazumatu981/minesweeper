@@ -16,12 +16,12 @@ export type StateMachineEvents = 'state-change';
  *
  * @typeParam TState - アクションの実行対象となる状態名の型。
  */
-export type StateActionHandler<TState> = {
+export type StateActionHandlers<TState> = {
     /** アクションを実行する状態。未指定の場合はすべての状態が対象 */
     state: TState | TState[] | undefined;
     /** 状態変化時に実行する処理 */
     action: EventCallback;
-};
+}[];
 
 /**
  * ステートマシンの遷移テーブルと状態別アクションを保持するコンテキスト。
@@ -38,7 +38,7 @@ export interface StateMachineContext<
     /** アクションと現在の状態から遷移先を決定するテーブル */
     transitionTable: DecisionTableDictionary<TAction, TState, TActionTo>;
     /** 状態変化時に実行するアクションの一覧 */
-    stateActionHandlers: StateActionHandler<TState>[];
+    stateActionHandlers: StateActionHandlers<TState>;
 }
 
 /**

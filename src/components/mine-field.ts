@@ -1,6 +1,6 @@
 import {
     StateMachine,
-    type StateActionHandler,
+    type StateActionHandlers,
     type DecisionTableDictionary,
     type StateMachineEvents,
     getNeighbor,
@@ -22,10 +22,7 @@ const ID_CHARACTERS =
 const MINE_FIELD_BASE_CLASS = formatClass(MINE_FIELD_PREFIX, BASE_SUFFIX);
 
 function formatMineFieldId(): string {
-    return formatId(
-        MINE_FIELD_PREFIX,
-        createRandomString(8, ID_CHARACTERS)
-    );
+    return formatId(MINE_FIELD_PREFIX, createRandomString(8, ID_CHARACTERS));
 }
 //#endregion
 
@@ -88,17 +85,16 @@ export class MineField extends UiComponentWithChildrenBase<
         },
     };
 
-    public readonly stateActionHandlers: StateActionHandler<MineFieldState>[] =
-        [
-            {
-                state: 'ended',
-                action: (field) => (field as MineField).emit('resolved', field),
-            },
-            {
-                state: 'failed',
-                action: (field) => (field as MineField).emit('bombed', field),
-            },
-        ];
+    public readonly stateActionHandlers: StateActionHandlers<MineFieldState> = [
+        {
+            state: 'ended',
+            action: (field) => (field as MineField).emit('resolved', field),
+        },
+        {
+            state: 'failed',
+            action: (field) => (field as MineField).emit('bombed', field),
+        },
+    ];
 
     public constructor(options: MineFieldOptions) {
         super({

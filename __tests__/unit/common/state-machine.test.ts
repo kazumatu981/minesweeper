@@ -1,6 +1,6 @@
 import {
     StateMachine,
-    type StateActionHandler,
+    type StateActionHandlers,
 } from '../../../src/common/state-machine.js';
 import { type DecisionTableDictionary } from '../../../src/common/decision-table.js';
 
@@ -16,7 +16,7 @@ type TestContext = {
         TestState,
         TestContext
     >;
-    stateActionHandlers: StateActionHandler<TestState>[];
+    stateActionHandlers: StateActionHandlers<TestState>;
 };
 
 /**
@@ -26,7 +26,7 @@ type TestContext = {
  * @returns コンテキストと、呼び出しを検証する遷移関数のモック。
  */
 function createTestContext(
-    stateActionHandlers: StateActionHandler<TestState>[] = []
+    stateActionHandlers: StateActionHandlers<TestState> = []
 ): {
     context: TestContext;
     transitionToRunning: ReturnType<
@@ -61,7 +61,7 @@ void describe('unittest: StateMachine', () => {
             runningAction = mock.fn(),
             selectedStatesAction = mock.fn(),
             anyStateAction = mock.fn();
-        const stateActionHandlers: StateActionHandler<TestState>[] = [
+        const stateActionHandlers: StateActionHandlers<TestState> = [
             { state: 'idle', action: idleAction },
             { state: 'running', action: runningAction },
             { state: ['running', 'finished'], action: selectedStatesAction },

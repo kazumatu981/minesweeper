@@ -3,7 +3,7 @@ import {
     StateMachine,
     type DecisionTable,
     type DecisionTableDictionary,
-    type StateActionHandler,
+    type StateActionHandlers,
     type StateMachineContext,
     type StateMachineEvents,
     UiComponentBase,
@@ -77,8 +77,13 @@ class MineClasses {
  */
 type MineStateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
 
+type MineDecisionTable = {
+    classes: MineStateDecisionTable<string[]>;
+    text: MineStateDecisionTable<string>;
+};
+
 type MineTransitionTable = DecisionTableDictionary<MineAction, MineState, Mine>;
-type MineStateAction = StateActionHandler<MineState>;
+type MineStateActionHandlers = StateActionHandlers<MineState>;
 
 export class Mine
     extends UiComponentBase<MineEvent>
@@ -88,40 +93,33 @@ export class Mine
     readonly #colId;
     readonly #sateMachine: StateMachine<MineState, MineAction, Mine>;
 
-    #neighborBombCount = 0;
-    #isBomb = false;
-
-    /**
-     * クラスの決定
-     */
-    public readonly classesDecisionTable: MineStateDecisionTable<string[]> = {
-        closed: (_) => [MineClasses.base, MineClasses.state('closed')],
-        mayBe: (_) => [MineClasses.base, MineClasses.state('mayBe')],
-        mustBe: (_) => [MineClasses.base, MineClasses.state('mustBe')],
-        opened: (mine) => [
-            MineClasses.base,
-            MineClasses.state('opened'),
-            MineClasses.neighbor(mine.#neighborBombCount),
-        ],
-        touched: (mine) => [
-            MineClasses.base,
-            MineClasses.state('touched'),
-            MineClasses.neighbor(mine.#neighborBombCount),
-        ],
-        bomb: (_) => [MineClasses.base, MineClasses.state('bomb')],
-    };
-    /**
-     * Mineのテキストの決定
-     */
-    public readonly textDecisionTable: MineStateDecisionTable<string> = {
-        closed: (_) => ' ',
-        mayBe: (_) => '?',
-        mustBe: (_) => 'F',
-        opened: (mine) =>
-            mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
-        touched: (mine) =>
-            mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
-        bomb: (_) => 'B',
+    readonly #decisionTable: MineDecisionTable = {
+        classes: {
+            closed: (_) => [MineClasses.base, MineClasses.state('closed')],
+            mayBe: (_) => [MineClasses.base, MineClasses.state('mayBe')],
+            mustBe: (_) => [MineClasses.base, MineClasses.state('mustBe')],
+            opened: (mine) => [
+                MineClasses.base,
+                MineClasses.state('opened'),
+                MineClasses.neighbor(mine.#neighborBombCount),
+            ],
+            touched: (mine) => [
+                MineClasses.base,
+                MineClasses.state('touched'),
+                MineClasses.neighbor(mine.#neighborBombCount),
+            ],
+            bomb: (_) => [MineClasses.base, MineClasses.state('bomb')],
+        },
+        text: {
+            closed: (_) => ' ',
+            mayBe: (_) => '?',
+            mustBe: (_) => 'F',
+            opened: (mine) =>
+                mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+            touched: (mine) =>
+                mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+            bomb: (_) => 'B',
+        },
     };
 
     public readonly transitionTable: MineTransitionTable = {
@@ -150,7 +148,7 @@ export class Mine
             touched: (_) => 'touched',
         },
     };
-    public readonly stateActionHandlers: MineStateAction[] = [
+    public readonly stateActionHandlers: MineStateActionHandlers = [
         {
             state: undefined,
             action: (mine) => (mine as Mine).#adjustFace(),
@@ -175,6 +173,9 @@ export class Mine
             action: (mine) => (mine as Mine).emit('opened', mine),
         },
     ];
+
+    #neighborBombCount = 0;
+    #isBomb = false;
 
     public constructor(rowId: number, colId: number) {
         // 親クラスのコンストラクタ
@@ -266,9 +267,10 @@ export class Mine
      */
     #adjustFace() {
         // テキストを設定
-        this.text = this.textDecisionTable[this.#sateMachine.state](this);
+        this.text = this.#decisionTable.text[this.#sateMachine.state](this);
         // クラスを設定
-        this.classes = this.classesDecisionTable[this.#sateMachine.state](this);
+        this.classes =
+            this.#decisionTable.classes[this.#sateMachine.state](this);
     }
     //#endregion
 }
