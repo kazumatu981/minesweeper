@@ -5,21 +5,32 @@ import {
     type DecisionTableDictionary,
     type StateActionHandler,
     type StateMachineContext,
+    type StateMachineEvents,
     UiComponentBase,
+    formatClass,
+    formatId,
+    createRandomString,
 } from '../common/index.js';
 
-import {
-    type MineState,
-    type MineEvent,
-    MINE_BASE_CLASS,
-    MINE_STATE_CLASSES,
-    MINE_BOMB_CLASS,
-    MINE_NEIGHBOR_CLASSES,
-    formatMineId,
-} from './utils/index.js';
+//#region 状態、イベント、アクションの定義
+/**
+ * Mineの状態定義
+ */
+export type MineState =
+    | 'closed'
+    | 'mustBe'
+    | 'mayBe'
+    | 'opened'
+    | 'touched'
+    | 'bomb';
 
 /**
- * UIイベント定義
+ * Mineのイベント定義
+ */
+export type MineEvent = StateMachineEvents | 'bombed' | 'opened' | 'resolved';
+
+/**
+ * Mineのアクション定義
  */
 type MineAction =
     /** タッチした */
@@ -28,6 +39,38 @@ type MineAction =
     | 'rClick'
     /**クリックした */
     | 'click';
+// #endregion
+
+//#region 識別子, クラス
+const MINE_PREFIX = '___mine';
+
+//#region 識別子
+const ID_CHARACTERS =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+function formatMineId(rowId: number, colId: number): string {
+    return formatId(
+        MINE_PREFIX,
+        createRandomString(8, ID_CHARACTERS),
+        rowId,
+        colId
+    );
+}
+//#endregion
+
+//#region クラス
+class MineClasses {
+    public static readonly base = formatClass(MINE_PREFIX, 'base');
+    public static readonly bomb = formatClass(MINE_PREFIX, 'bomb');
+    public static neighbor(neighborCount: number): string {
+        return formatClass(MINE_PREFIX, undefined, 'neighbor', neighborCount);
+    }
+    public static state(state: MineState): string {
+        return formatClass(MINE_PREFIX, undefined, 'state', state);
+    }
+}
+//#endregion
+
+//#endregion
 
 /**
  * Mineの状態に応じた述語関数決定テーブル
@@ -52,24 +95,20 @@ export class Mine
      * クラスの決定
      */
     public readonly classesDecisionTable: MineStateDecisionTable<string[]> = {
-        closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
-        mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
-        mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
+        closed: (_) => [MineClasses.base, MineClasses.state('closed')],
+        mayBe: (_) => [MineClasses.base, MineClasses.state('mayBe')],
+        mustBe: (_) => [MineClasses.base, MineClasses.state('mustBe')],
         opened: (mine) => [
-            MINE_BASE_CLASS,
-            MINE_STATE_CLASSES.opened,
-            MINE_NEIGHBOR_CLASSES[mine.#neighborBombCount]!,
+            MineClasses.base,
+            MineClasses.state('opened'),
+            MineClasses.neighbor(mine.#neighborBombCount),
         ],
         touched: (mine) => [
-            MINE_BASE_CLASS,
-            MINE_STATE_CLASSES.touched,
-            MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
+            MineClasses.base,
+            MineClasses.state('touched'),
+            MineClasses.neighbor(mine.#neighborBombCount),
         ],
-        bomb: (_) => [
-            MINE_BASE_CLASS,
-            MINE_STATE_CLASSES.bomb,
-            MINE_BOMB_CLASS,
-        ],
+        bomb: (_) => [MineClasses.base, MineClasses.state('bomb')],
     };
     /**
      * Mineのテキストの決定
@@ -84,6 +123,7 @@ export class Mine
             mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
         bomb: (_) => 'B',
     };
+
     public readonly transitionTable: MineTransitionTable = {
         touch: {
             closed: (mine: Mine) => (mine.isBomb ? 'closed' : 'touched'),
@@ -110,7 +150,6 @@ export class Mine
             touched: (_) => 'touched',
         },
     };
-
     public readonly stateActionHandlers: MineStateAction[] = [
         {
             state: undefined,

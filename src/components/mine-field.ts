@@ -2,19 +2,47 @@ import {
     StateMachine,
     type StateActionHandler,
     type DecisionTableDictionary,
+    type StateMachineEvents,
     getNeighbor,
     createRandomCoordinates,
     UiComponentWithChildrenBase,
+    formatClass,
+    formatId,
+    createRandomString,
 } from '../common/index.js';
-import {
-    type MineEvent,
-    type MineFieldEvent,
-    type MineFieldState,
-    MINE_FIELD_BASE_CLASS,
-    formatMineFieldId,
-} from './utils/index.js';
 import { MineRow } from './mine-row.js';
-import { Mine } from './mine.js';
+import { Mine, type MineEvent } from './mine.js';
+
+//#region MineFieldの識別子とクラス
+const MINE_FIELD_PREFIX = '___mine_field';
+const BASE_SUFFIX = 'base';
+const ID_CHARACTERS =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+const MINE_FIELD_BASE_CLASS = formatClass(MINE_FIELD_PREFIX, BASE_SUFFIX);
+
+function formatMineFieldId(): string {
+    return formatId(
+        MINE_FIELD_PREFIX,
+        createRandomString(8, ID_CHARACTERS)
+    );
+}
+//#endregion
+
+export type MineFieldEvent =
+    | StateMachineEvents
+    | 'score-changed'
+    | 'resolved'
+    | 'bombed';
+
+export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
+
+export const MINE_FIELD_STATES: Record<MineFieldState, string> = {
+    initialized: 'initialized',
+    started: 'started',
+    ended: 'ended',
+    failed: 'failed',
+};
 
 type MineFieldAction = 'open-mine' | 'fail' | 'reset';
 

@@ -1,6 +1,5 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { MINE_STATES } from '../../../src/components/utils/index.js';
 import { Mine } from '../../../src/components/mine.js';
 import { mockDocument, restoreDocument } from '../util/document_mock.js';
 
@@ -29,7 +28,7 @@ void describe('Mine: constructor', () => {
         void it('state: closed', () => {
             const mine = new Mine(1, 2);
 
-            assert.equal(mine.state, MINE_STATES.closed);
+            assert.equal(mine.state, 'closed');
         });
         void it('isBomb: false', () => {
             const mine = new Mine(1, 2);

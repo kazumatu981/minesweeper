@@ -3,10 +3,9 @@
 import { describe, it, beforeEach, mock, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    MINE_STATES,
+    Mine,
     type MineEvent,
-} from '../../../src/components/utils/index.js';
-import { Mine } from '../../../src/components/mine.js';
+} from '../../../src/components/mine.js';
 import {
     mockDocument,
     restoreDocument,
@@ -59,7 +58,7 @@ void describe('Mine state', () => {
         mockEvents(mine);
 
         // assert state
-        assert.equal(mine.state, MINE_STATES.closed);
+        assert.equal(mine.state, 'closed');
 
         // assert call count
         assertCalled({
@@ -79,7 +78,7 @@ void describe('Mine state', () => {
             mine.touch();
 
             // test state
-            assert.equal(mine.state, MINE_STATES.touched);
+            assert.equal(mine.state, 'touched');
             // test call count
             assertCalled({
                 'state-change': 1,
@@ -98,7 +97,7 @@ void describe('Mine state', () => {
             mine.touch();
 
             // test state
-            assert.equal(mine.state, MINE_STATES.closed);
+            assert.equal(mine.state, 'closed');
             // test call count
             assertCalled({
                 'state-change': 0,
@@ -116,7 +115,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.mustBe);
+            assert.equal(mine.state, 'mustBe');
             assertCalled({
                 'state-change': 1,
                 bombed: 0,
@@ -126,7 +125,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.mayBe);
+            assert.equal(mine.state, 'mayBe');
             assertCalled({
                 'state-change': 2,
                 bombed: 0,
@@ -136,7 +135,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.closed);
+            assert.equal(mine.state, 'closed');
             assertCalled({
                 'state-change': 3,
                 bombed: 0,
@@ -151,7 +150,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.mustBe);
+            assert.equal(mine.state, 'mustBe');
             assertCalled({
                 'state-change': 1,
                 bombed: 0,
@@ -161,7 +160,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.mayBe);
+            assert.equal(mine.state, 'mayBe');
             assertCalled({
                 'state-change': 2,
                 bombed: 0,
@@ -171,7 +170,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.closed);
+            assert.equal(mine.state, 'closed');
             assertCalled({
                 'state-change': 3,
                 bombed: 0,
@@ -189,7 +188,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.opened);
+            assert.equal(mine.state, 'opened');
             assertCalled({
                 'state-change': 0,
                 bombed: 0,
@@ -208,7 +207,7 @@ void describe('Mine state', () => {
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
-            assert.equal(mine.state, MINE_STATES.bomb);
+            assert.equal(mine.state, 'bomb');
             assertCalled({
                 'state-change': 0,
                 bombed: 0,
@@ -225,7 +224,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.opened);
+                assert.equal(mine.state, 'opened');
                 assertCalled({
                     'state-change': 1,
                     resolved: 1,
@@ -240,7 +239,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(mine.state, 'bomb');
                 assertCalled({
                     'state-change': 1,
                     resolved: 0,
@@ -259,7 +258,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.touched);
+                assert.equal(mine.state, 'touched');
                 assertCalled({
                     'state-change': 0,
                     resolved: 0,
@@ -279,7 +278,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.opened);
+                assert.equal(mine.state, 'opened');
                 assertCalled({
                     'state-change': 1,
                     resolved: 1,
@@ -298,7 +297,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(mine.state, 'bomb');
                 assertCalled({
                     'state-change': 1,
                     resolved: 0,
@@ -317,7 +316,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.mustBe);
+                assert.equal(mine.state, 'mustBe');
                 assertCalled({
                     'state-change': 0,
                     resolved: 0,
@@ -335,7 +334,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.mustBe);
+                assert.equal(mine.state, 'mustBe');
                 assertCalled({
                     'state-change': 0,
                     resolved: 0,
@@ -355,7 +354,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.bomb);
+                assert.equal(mine.state, 'bomb');
                 assertCalled({
                     'state-change': 0,
                     resolved: 0,
@@ -374,7 +373,7 @@ void describe('Mine state', () => {
 
                 // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
-                assert.equal(mine.state, MINE_STATES.opened);
+                assert.equal(mine.state, 'opened');
                 assertCalled({
                     'state-change': 0,
                     resolved: 0,

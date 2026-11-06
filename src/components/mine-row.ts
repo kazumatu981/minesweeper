@@ -1,14 +1,29 @@
 import {
     __assertBetween,
     UiComponentWithChildrenBase,
+    formatClass,
+    formatId,
+    createRandomString,
 } from '../common/index.js';
-import {
-    type MineEvent,
-    SIZE_MAX,
-    MINE_ROW_BASE_CLASS,
-    formatMineRowId,
-} from './utils/index.js';
-import { Mine } from './mine.js';
+import { Mine, type MineEvent } from './mine.js';
+
+//#region MineRowの識別子・クラス・サイズ上限
+const SIZE_MAX = 20;
+const MINE_ROW_PREFIX = '___mine_row';
+const BASE_SUFFIX = 'base';
+const ID_CHARACTERS =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+const MINE_ROW_BASE_CLASS = formatClass(MINE_ROW_PREFIX, BASE_SUFFIX);
+
+function formatMineRowId(rowId: number): string {
+    return formatId(
+        MINE_ROW_PREFIX,
+        createRandomString(8, ID_CHARACTERS),
+        rowId
+    );
+}
+//#endregion
 
 export interface MineRowConfig {
     rowId: number;
