@@ -11,8 +11,8 @@ function onPageLoad() {
     const testPanel = document.getElementById('testPanel');
 
     const field = new MineField({
-        size: 3,
-        bombCount: 3,
+        size: 10,
+        bombCount: 5,
     });
 
     testPanel?.appendChild(field.element);

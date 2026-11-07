@@ -105,7 +105,16 @@ export class MineField
             classes: [MINE_FIELD_BASE_CLASS],
             childrenCount: options.size,
             generateChild: (rowId) =>
-                new MineRow({ rowId, size: options.size }),
+                new MineRow({
+                    rowId,
+                    size: options.size,
+                    mineGenerator: (rowId: number, colId) => {
+                        const mine = new Mine(rowId, colId);
+                        mine.on('bombed', (m) => this.fail(m as Mine));
+                        mine.on('opened', (m) => this.openMine(m as Mine));
+                        return mine;
+                    },
+                }),
         });
 
         this.#stateMachine = new StateMachine<
@@ -177,7 +186,7 @@ export class MineField
         if (rebuild) {
             this.#buildField();
         }
-        this.#setMinesEventListeners();
+        this.#resetMines();
         this.#setBombs();
         this.#adjustNeighborCount();
     }
@@ -185,10 +194,8 @@ export class MineField
     #buildField(): void {
         this.resetChildren(this.#options.size);
     }
-    #setMinesEventListeners(): void {
+    #resetMines(): void {
         this.mines.forEach((mine) => {
-            mine.on('bombed', (m) => this.fail(m as Mine));
-            mine.on('opened', (m) => this.openMine(m as Mine));
             mine.reset();
         });
     }

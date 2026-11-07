@@ -25,9 +25,12 @@ function formatMineRowId(rowId: number): string {
 }
 //#endregion
 
+type MineGenerator = (rowId: number, colId: number) => Mine;
+
 export interface MineRowConfig {
     rowId: number;
     size: number;
+    mineGenerator: MineGenerator;
 }
 
 export class MineRow extends UiComponentWithChildrenBase<
@@ -38,8 +41,8 @@ export class MineRow extends UiComponentWithChildrenBase<
     readonly #rowId;
     readonly #size;
 
-    public constructor(MineRowConfig: MineRowConfig) {
-        const { rowId, size } = MineRowConfig;
+    public constructor(mineRowConfig: MineRowConfig) {
+        const { rowId, size, mineGenerator } = mineRowConfig;
         __assertBetween(size, 0, SIZE_MAX);
         __assertBetween(rowId, 0, size - 1);
 
@@ -47,7 +50,7 @@ export class MineRow extends UiComponentWithChildrenBase<
             id: formatMineRowId(rowId),
             classes: [MINE_ROW_BASE_CLASS],
             childrenCount: size,
-            generateChild: (colId) => new Mine(rowId, colId),
+            generateChild: (colId) => mineGenerator(rowId, colId),
         });
         this.#rowId = rowId;
         this.#size = size;
