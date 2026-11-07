@@ -69,6 +69,27 @@ void describe('Mine state', () => {
         });
     });
 
+    void it('[reset] returns a mine to its initial state', () => {
+        const mine = new Mine(1, 1);
+        mockEvents(mine);
+        mine.neighborCount = 2;
+        mine.touch();
+        mine.isBomb = true;
+        resetCalls();
+
+        mine.reset();
+
+        assert.equal(mine.state, 'closed');
+        assert.equal(mine.isBomb, false);
+        assert.equal(mine.neighborCount, 0);
+        assertCalled({
+            'state-change': 1,
+            resolved: 0,
+            bombed: 0,
+            opened: 0,
+        });
+    });
+
     void describe('[touch]', () => {
         void it("'closed' --> 'touched' when not a bomb", () => {
             const mine = new Mine(1, 1);
