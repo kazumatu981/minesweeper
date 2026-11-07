@@ -72,9 +72,6 @@ class MineClasses {
 
 //#endregion
 
-/**
- * Mineの状態に応じた述語関数決定テーブル
- */
 type MineStateDecisionTable<T> = DecisionTable<MineState, T, Mine>;
 
 type MineDecisionTable = {
@@ -83,6 +80,9 @@ type MineDecisionTable = {
 };
 
 type MineTransitionTable = DecisionTableDictionary<MineAction, MineState, Mine>;
+/**
+ * Mineの状態に応じた述語関数決定テーブル
+ */
 type MineStateActionHandlers = StateActionHandlers<MineState>;
 
 export class Mine
@@ -91,6 +91,9 @@ export class Mine
 {
     readonly #rowId;
     readonly #colId;
+    #neighborBombCount = 0;
+    #isBomb = false;
+
     readonly #sateMachine: StateMachine<MineState, MineAction, Mine>;
 
     readonly #decisionTable: MineDecisionTable = {
@@ -173,9 +176,6 @@ export class Mine
             action: (mine) => (mine as Mine).emit('opened', mine),
         },
     ];
-
-    #neighborBombCount = 0;
-    #isBomb = false;
 
     public constructor(rowId: number, colId: number) {
         // 親クラスのコンストラクタ
