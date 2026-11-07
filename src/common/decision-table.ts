@@ -15,7 +15,6 @@ type Resolver<TIn, TOut> = (x: TIn) => TOut;
 export type DecisionTable<TState extends string, TOut, TActionTo> = {
     [K in TState]: Resolver<TActionTo, TOut>;
 };
-
 /**
  * アクションごとの決定テーブルを保持する辞書。
  *
