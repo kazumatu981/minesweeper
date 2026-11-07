@@ -1,5 +1,6 @@
 import {
     StateMachine,
+    type StateMachineContext,
     type StateActionHandlers,
     type DecisionTableDictionary,
     type StateMachineEvents,
@@ -48,11 +49,17 @@ export interface MineFieldOptions {
     bombCount: number;
 }
 
-export class MineField extends UiComponentWithChildrenBase<
-    MineFieldEvent,
-    MineEvent,
-    MineRow
-> {
+type StateMachineTransitionTable = DecisionTableDictionary<
+    MineFieldAction,
+    MineFieldState,
+    MineField
+>;
+
+type MineFieldStateActionHandlers = StateActionHandlers<MineFieldState>;
+export class MineField
+    extends UiComponentWithChildrenBase<MineFieldEvent, MineEvent, MineRow>
+    implements StateMachineContext<MineFieldState, MineFieldAction, MineField>
+{
     #options: MineFieldOptions;
     readonly #stateMachine: StateMachine<
         MineFieldState,
@@ -60,11 +67,7 @@ export class MineField extends UiComponentWithChildrenBase<
         MineField
     >;
 
-    public readonly transitionTable: DecisionTableDictionary<
-        MineFieldAction,
-        MineFieldState,
-        this
-    > = {
+    public readonly transitionTable: StateMachineTransitionTable = {
         'open-mine': {
             initialized: (field) => (field.isEnded ? 'ended' : 'started'),
             started: (field) => (field.isEnded ? 'ended' : 'started'),
@@ -85,7 +88,7 @@ export class MineField extends UiComponentWithChildrenBase<
         },
     };
 
-    public readonly stateActionHandlers: StateActionHandlers<MineFieldState> = [
+    public readonly stateActionHandlers: MineFieldStateActionHandlers = [
         {
             state: 'ended',
             action: (field) => (field as MineField).emit('resolved', field),
