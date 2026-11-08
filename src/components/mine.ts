@@ -241,7 +241,7 @@ export class Mine
         },
         {
             // 開封通知
-            state: ['opened', 'touched'],
+            state: ['opened', 'touched', 'mustBe'],
             action: (mine) => (mine as Mine).emit('resolved', mine),
         },
         {

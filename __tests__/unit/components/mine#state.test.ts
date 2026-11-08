@@ -140,9 +140,10 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 1,
                 bombed: 0,
-                resolved: 0,
+                resolved: 1,
                 opened: 0,
             });
+            assert.deepEqual(onResolvedMock.mock.calls[0]?.arguments, [mine]);
 
             // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -150,7 +151,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 2,
                 bombed: 0,
-                resolved: 0,
+                resolved: 1,
                 opened: 0,
             });
 
@@ -160,7 +161,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 3,
                 bombed: 0,
-                resolved: 0,
+                resolved: 1,
                 opened: 0,
             });
         });
@@ -175,7 +176,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 1,
                 bombed: 0,
-                resolved: 0,
+                resolved: 1,
                 opened: 0,
             });
 
@@ -185,7 +186,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 2,
                 bombed: 0,
-                resolved: 0,
+                resolved: 1,
                 opened: 0,
             });
 
@@ -195,7 +196,7 @@ void describe('Mine state', () => {
             assertCalled({
                 'state-change': 3,
                 bombed: 0,
-                resolved: 0,
+                resolved: 1,
                 opened: 0,
             });
         });
