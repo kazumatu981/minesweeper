@@ -10,11 +10,16 @@ import {
     formatClass,
     formatId,
     createRandomString,
+    type Coordinate,
+    __assertBetween,
+    __assertIsUndefined,
+    __assertIsDefined,
 } from '../common/index.js';
 import { MineRow } from './mine-row.js';
 import { Mine, type MineEvent } from './mine.js';
 
 //#region MineFieldの識別子とクラス
+const SIZE_MAX = 20;
 const MINE_FIELD_PREFIX = '___mine_field';
 const BASE_SUFFIX = 'base';
 const ID_CHARACTERS =
@@ -44,9 +49,43 @@ export const MINE_FIELD_STATES: Record<MineFieldState, string> = {
 
 type MineFieldAction = 'open-mine' | 'fail' | 'reset';
 
-export interface MineFieldOptions {
+export interface BombPosition {
+    rowId: number;
+    colId: number;
+}
+
+function _coordinateToBombPosition(coordinate: Coordinate): BombPosition {
+    return {
+        rowId: coordinate.x,
+        colId: coordinate.y,
+    };
+}
+export interface BombOptions {
     size: number;
-    bombCount: number;
+    bombCount?: number | undefined;
+    bombs?: BombPosition[] | undefined;
+}
+
+function __assertBombOptions(bombOptions: BombOptions) {
+    __assertBetween(bombOptions.size, 0, SIZE_MAX);
+    if (bombOptions.bombs !== undefined) {
+        __assertIsUndefined(bombOptions.bombCount);
+        bombOptions.bombs.forEach((bombPosition) => {
+            __assertBetween(bombPosition.rowId, 0, bombOptions.size);
+            __assertBetween(bombPosition.colId, 0, bombOptions.size);
+        });
+    } else {
+        __assertIsDefined(bombOptions.bombCount);
+        __assertBetween(
+            bombOptions.bombCount!,
+            0,
+            bombOptions.size * bombOptions.size
+        );
+    }
+}
+
+export interface MineFieldOptions extends BombOptions {
+    size: number;
 }
 
 type StateMachineTransitionTable = DecisionTableDictionary<
@@ -131,9 +170,9 @@ export class MineField
     public get size(): number {
         return this.#options.size;
     }
-    public get bombCount(): number {
-        return this.#options.bombCount;
-    }
+    // public get bombCount(): number {
+    //     return this.#options.bombCount;
+    // }
 
     public get rows(): readonly MineRow[] {
         return this.children;
@@ -202,7 +241,7 @@ export class MineField
 
     #setBombs() {
         const { size, bombCount } = this.#options;
-        createRandomCoordinates(size, bombCount).forEach((v) => {
+        createRandomCoordinates(size, bombCount!).forEach((v) => {
             this.mine(v.x, v.y).isBomb = true;
         });
     }

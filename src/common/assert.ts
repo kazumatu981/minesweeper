@@ -43,6 +43,24 @@ export function __assertSomeOf<T>(value: T, array: T[]): void {
     }
 }
 /**
+ * 変数が定義されているか
+ * @param value 対象変数
+ */
+export function __assertIsDefined<T>(value: T) {
+    if (value === undefined) {
+        throw new AssertionError('The value must be defined.');
+    }
+}
+/**
+ * 対象がundefinedか
+ * @param value 対象変数
+ */
+export function __assertIsUndefined<T>(value: T) {
+    if (value !== undefined) {
+        throw new AssertionError('The value must be undefined.');
+    }
+}
+/**
  * IDからDOMエレメントを安全に取得する
  * 見つからなかった場合は、例外を発生させる
  * @param id エレメントID
