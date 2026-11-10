@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { Mine } from '../../../src/components/mine.js';
-import { mockDocument, restoreDocument } from '../util/document_mock.js';
+import { Mine } from '../../../../src/components/mine.js';
+import { mockDocument, restoreDocument } from '../../util/document_mock.js';
 
 /**
  * コンストラクタのテスト

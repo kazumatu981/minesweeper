@@ -2,15 +2,12 @@
 /* eslint-disable max-statements */
 import { describe, it, beforeEach, mock, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-    Mine,
-    type MineEvent,
-} from '../../../src/components/mine.js';
+import { Mine, type MineEvent } from '../../../../src/components/mine.js';
 import {
     mockDocument,
     restoreDocument,
     type Mocker,
-} from '../util/document_mock.js';
+} from '../../util/document_mock.js';
 
 void describe('Mine state', () => {
     const onStateChangeMock = mock.fn();

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Mine } from '../../../src/components/mine.js';
+import { Mine } from '../../../../src/components/mine.js';
 import {
     mockDocument,
     restoreDocument,
     type Mocker,
-} from '../util/document_mock.js';
+} from '../../util/document_mock.js';
 
 void describe('Mine display', () => {
     let mocker: Mocker;
