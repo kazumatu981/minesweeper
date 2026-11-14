@@ -170,9 +170,6 @@ export class MineField
     public get size(): number {
         return this.#options.size;
     }
-    // public get bombCount(): number {
-    //     return this.#options.bombCount;
-    // }
 
     public get rows(): readonly MineRow[] {
         return this.children;
