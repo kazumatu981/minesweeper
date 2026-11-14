@@ -3,7 +3,6 @@ import {
     type StateMachineContext,
     type StateActionHandlers,
     type DecisionTableDictionary,
-    type StateMachineEvents,
     getNeighbor,
     createRandomCoordinates,
     UiComponentWithChildrenBase,
@@ -18,41 +17,63 @@ import {
 import { MineRow } from './mine-row.js';
 import { Mine, type MineEvent } from './mine.js';
 
-//#region MineFieldの識別子とクラス
+//#region 状態、イベント、アクションの定義
+/**
+ * MineFieldの状態定義
+ */
+export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
+/**
+ * MineFieldのイベント定義
+ */
+export type MineFieldEvent = MineEvent | 'score-changed';
+/**
+ * MineFieldアクション定義
+ */
+type MineFieldAction =
+    /** 解答に近づいた */
+    | 'resolve'
+    /** 失敗した */
+    | 'fail'
+    /** リセットした */
+    | 'reset';
+/**
+ * サイズの最大値
+ */
 const SIZE_MAX = 20;
+//#endregion
+
+//#region 識別子, クラス
 const MINE_FIELD_PREFIX = '___mine_field';
-const BASE_SUFFIX = 'base';
 const ID_CHARACTERS =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-const MINE_FIELD_BASE_CLASS = formatClass(MINE_FIELD_PREFIX, BASE_SUFFIX);
-
+/**
+ * 固有な識別子を作成する
+ * @returns 識別子
+ */
 function formatMineFieldId(): string {
     return formatId(MINE_FIELD_PREFIX, createRandomString(8, ID_CHARACTERS));
 }
+/**
+ * MineFieldCSSクラス名
+ */
+const MINE_FIELD_BASE_CLASS = formatClass(MINE_FIELD_PREFIX, 'base');
 //#endregion
 
-export type MineFieldEvent =
-    | StateMachineEvents
-    | 'score-changed'
-    | 'resolved'
-    | 'opened'
-    | 'bombed';
-
-export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
-
-export const MINE_FIELD_STATES: Record<MineFieldState, string> = {
-    initialized: 'initialized',
-    started: 'started',
-    ended: 'ended',
-    failed: 'failed',
-};
-
-type MineFieldAction = 'resolve' | 'fail' | 'reset';
-
+//#region MineFieldの設定
+/**
+ * Bombの位置
+ */
 export interface BombPosition {
     rowId: number;
     colId: number;
+}
+/**
+ * MineFieldオプション
+ */
+export interface MineFieldOptions {
+    size: number;
+    bombCount?: number | undefined;
+    bombs?: BombPosition[] | undefined;
 }
 
 function _coordinateToBombPosition(coordinate: Coordinate): BombPosition {
@@ -61,41 +82,55 @@ function _coordinateToBombPosition(coordinate: Coordinate): BombPosition {
         colId: coordinate.y,
     };
 }
-export interface BombOptions {
-    size: number;
-    bombCount?: number | undefined;
-    bombs?: BombPosition[] | undefined;
-}
-
-function __assertBombOptions(bombOptions: BombOptions) {
-    __assertBetween(bombOptions.size, 0, SIZE_MAX);
-    if (bombOptions.bombs !== undefined) {
-        __assertIsUndefined(bombOptions.bombCount);
-        bombOptions.bombs.forEach((bombPosition) => {
-            __assertBetween(bombPosition.rowId, 0, bombOptions.size);
-            __assertBetween(bombPosition.colId, 0, bombOptions.size);
+function __assertBombOptions(mineFieldOptions: MineFieldOptions) {
+    __assertBetween(mineFieldOptions.size, 0, SIZE_MAX);
+    if (mineFieldOptions.bombs !== undefined) {
+        __assertIsUndefined(mineFieldOptions.bombCount);
+        mineFieldOptions.bombs.forEach((bombPosition) => {
+            __assertBetween(bombPosition.rowId, 0, mineFieldOptions.size);
+            __assertBetween(bombPosition.colId, 0, mineFieldOptions.size);
         });
-    } else {
-        __assertIsDefined(bombOptions.bombCount);
         __assertBetween(
-            bombOptions.bombCount!,
+            mineFieldOptions.bombs.length,
             0,
-            bombOptions.size * bombOptions.size
+            mineFieldOptions.size * mineFieldOptions.size
+        );
+    } else {
+        __assertIsDefined(mineFieldOptions.bombCount);
+        __assertBetween(
+            mineFieldOptions.bombCount!,
+            0,
+            mineFieldOptions.size * mineFieldOptions.size
         );
     }
 }
+function safeBomPositions(mineFieldOptions: MineFieldOptions): BombPosition[] {
+    __assertBombOptions(mineFieldOptions);
 
-export interface MineFieldOptions extends BombOptions {
-    size: number;
+    return (
+        mineFieldOptions.bombs ??
+        createRandomCoordinates(
+            mineFieldOptions.size,
+            mineFieldOptions.bombCount!
+        ).map(_coordinateToBombPosition)
+    );
 }
+//#endregion
 
+//#region 状態遷移テーブル、状態アクションハンドラ (StateMachineContextの実装として使用する)
+/**
+ * 状態遷移テーブル
+ */
 type StateMachineTransitionTable = DecisionTableDictionary<
     MineFieldAction,
     MineFieldState,
     MineField
 >;
-
+/**
+ * 状態に応じた述語関数決定テーブル
+ */
 type MineFieldStateActionHandlers = StateActionHandlers<MineFieldState>;
+//#endregion
 
 const eventMap = new Map<MineEvent, MineFieldEvent>([
     ['bombed', 'bombed'],
@@ -169,7 +204,8 @@ export class MineField
         this.#options = options;
 
         this.#registerEvents();
-        this.#resetRows(false);
+
+        this.#initialize();
     }
 
     public get size(): number {
@@ -205,9 +241,10 @@ export class MineField
     }
 
     // TODO Refactor reset.....
-    public resetField(size: number, bombCount: number): void {
-        this.#options = { size, bombCount };
-        this.#resetRows(true);
+    public resetField(options: MineFieldOptions): void {
+        this.#options = options;
+        this.resetChildren(this.#options.size);
+        this.#initialize();
         // 爆弾をセットする
         this.#stateMachine.applyAction('reset');
     }
@@ -227,17 +264,10 @@ export class MineField
     }
 
     // TODO Refactor reset.....
-    #resetRows(rebuild: boolean): void {
-        if (rebuild) {
-            this.#buildField();
-        }
+    #initialize(): void {
         this.#resetMines();
         this.#setBombs();
         this.#adjustNeighborCount();
-    }
-
-    #buildField(): void {
-        this.resetChildren(this.#options.size);
     }
     #resetMines(): void {
         this.mines.forEach((mine) => {
@@ -245,9 +275,8 @@ export class MineField
         });
     }
     #setBombs() {
-        const { size, bombCount } = this.#options;
-        createRandomCoordinates(size, bombCount!).forEach((v) => {
-            this.mine(v.x, v.y).isBomb = true;
+        safeBomPositions(this.#options).forEach((position) => {
+            this.mine(position.rowId, position.colId).isBomb = true;
         });
     }
     #adjustNeighborCount(): void {

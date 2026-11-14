@@ -98,8 +98,6 @@ class MineClasses {
 }
 //#endregion
 
-//#endregion
-
 //#region 決定テーブルの型定義
 /**
  * Mineの状態に応じたクラスとテキストを決定するための決定テーブル
