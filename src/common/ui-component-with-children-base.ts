@@ -12,6 +12,7 @@ export type ChildGenerator<T> = (index: number) => T;
  * @typeParam TChild - 生成する子コンポーネントの型です。
  */
 export interface UiComponentWithChildrenConfig<
+    TMyEvent extends string,
     TChildEvent extends string,
     TChild extends UiComponentBase<TChildEvent>,
 > extends UiComponentConfig {
@@ -19,6 +20,7 @@ export interface UiComponentWithChildrenConfig<
     childrenCount: number;
     /** インデックスを受け取り、子コンポーネントを生成する関数です。 */
     generateChild: ChildGenerator<TChild>;
+    eventMap?: Map<TChildEvent, TMyEvent> | undefined;
 }
 
 /**
@@ -38,6 +40,7 @@ export abstract class UiComponentWithChildrenBase<
 
     /** 子コンポーネントを生成する関数です。 */
     readonly #generateChild: ChildGenerator<TChild>;
+    readonly #eventMap?: Map<TChildEvent, TMyEvent> | undefined;
 
     /**
      * 設定に基づいてコンポーネントと子コンポーネントを初期化します。
@@ -45,11 +48,16 @@ export abstract class UiComponentWithChildrenBase<
      * @param elementConfig - DOM 要素と子コンポーネントの生成に使う設定です。
      */
     public constructor(
-        elementConfig: UiComponentWithChildrenConfig<TChildEvent, TChild>
+        elementConfig: UiComponentWithChildrenConfig<
+            TMyEvent,
+            TChildEvent,
+            TChild
+        >
     ) {
         super(elementConfig);
 
         this.#generateChild = elementConfig.generateChild;
+        this.#eventMap = elementConfig.eventMap;
 
         this.resetChildren(elementConfig.childrenCount);
     }
@@ -67,9 +75,16 @@ export abstract class UiComponentWithChildrenBase<
     public resetChildren(childrenCount: number): void {
         const children = this.generateChildren(childrenCount);
 
+        // 要素のリセット
         this.#children.splice(0);
         children.forEach((child) => {
             this.#children.push(child);
+        });
+
+        // DOMのリセット
+        this.element.replaceChildren();
+        children.forEach((child) => {
+            this.element.appendChild(child.element);
         });
     }
 
@@ -79,17 +94,20 @@ export abstract class UiComponentWithChildrenBase<
      * @param childrenCount - 生成する子コンポーネントの数です。
      * @returns 生成した子コンポーネントの一覧です。
      */
-    protected generateChildren(childrenCount: number): TChild[] {
-        const children = Array.from({ length: childrenCount }).map((_, index) =>
-            this.#generateChild(index)
-        );
-
-        this.element.replaceChildren();
-
-        children.forEach((child) => {
-            this.element.appendChild(child.element);
-        });
-
+    private generateChildren(childrenCount: number): TChild[] {
+        const children = Array.from({ length: childrenCount })
+            .map((_, index) => this.#generateChild(index))
+            .map((child) => {
+                if (this.#eventMap) {
+                    this.#eventMap.keys().forEach((childEvent) => {
+                        const myEvent = this.#eventMap!.get(childEvent)!;
+                        child.on(childEvent, (...args) =>
+                            this.emit(myEvent, ...args)
+                        );
+                    });
+                }
+                return child;
+            });
         return children;
     }
 }

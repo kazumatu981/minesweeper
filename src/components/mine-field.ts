@@ -36,6 +36,7 @@ export type MineFieldEvent =
     | StateMachineEvents
     | 'score-changed'
     | 'resolved'
+    | 'opened'
     | 'bombed';
 
 export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
@@ -47,7 +48,7 @@ export const MINE_FIELD_STATES: Record<MineFieldState, string> = {
     failed: 'failed',
 };
 
-type MineFieldAction = 'open-mine' | 'fail' | 'reset';
+type MineFieldAction = 'resolve' | 'fail' | 'reset';
 
 export interface BombPosition {
     rowId: number;
@@ -95,6 +96,13 @@ type StateMachineTransitionTable = DecisionTableDictionary<
 >;
 
 type MineFieldStateActionHandlers = StateActionHandlers<MineFieldState>;
+
+const eventMap = new Map<MineEvent, MineFieldEvent>([
+    ['bombed', 'bombed'],
+    ['resolved', 'resolved'],
+    ['opened', 'opened'],
+    ['state-change', 'state-change'],
+]);
 export class MineField
     extends UiComponentWithChildrenBase<MineFieldEvent, MineEvent, MineRow>
     implements StateMachineContext<MineFieldState, MineFieldAction, MineField>
@@ -107,7 +115,7 @@ export class MineField
     >;
 
     public readonly transitionTable: StateMachineTransitionTable = {
-        'open-mine': {
+        resolve: {
             initialized: (field) => (field.isEnded ? 'ended' : 'started'),
             started: (field) => (field.isEnded ? 'ended' : 'started'),
             ended: (_) => 'ended',
@@ -147,13 +155,9 @@ export class MineField
                 new MineRow({
                     rowId,
                     size: options.size,
-                    mineGenerator: (rowId: number, colId) => {
-                        const mine = new Mine(rowId, colId);
-                        mine.on('bombed', (m) => this.fail(m as Mine));
-                        mine.on('opened', (m) => this.openMine(m as Mine));
-                        return mine;
-                    },
+                    mineGenerator: (rowId, colId) => new Mine(rowId, colId),
                 }),
+            eventMap,
         });
 
         this.#stateMachine = new StateMachine<
@@ -164,6 +168,7 @@ export class MineField
 
         this.#options = options;
 
+        this.#registerEvents();
         this.#resetRows(false);
     }
 
@@ -199,6 +204,7 @@ export class MineField
         return this.children[rowId]!.children[colId]!;
     }
 
+    // TODO Refactor reset.....
     public resetField(size: number, bombCount: number): void {
         this.#options = { size, bombCount };
         this.#resetRows(true);
@@ -209,15 +215,18 @@ export class MineField
     public fail(_mine: Mine): void {
         this.#stateMachine.applyAction('fail');
     }
-    public openMine(mine: Mine): void {
+    public resolve(_mine: Mine): void {
+        this.#stateMachine.applyAction('resolve');
+    }
+    public touchNeighbor(mine: Mine): void {
         this.#getNeighborMines(mine).forEach((m) => {
             if (m !== mine) {
                 m.touch();
             }
         });
-        this.#stateMachine.applyAction('open-mine');
     }
 
+    // TODO Refactor reset.....
     #resetRows(rebuild: boolean): void {
         if (rebuild) {
             this.#buildField();
@@ -235,14 +244,12 @@ export class MineField
             mine.reset();
         });
     }
-
     #setBombs() {
         const { size, bombCount } = this.#options;
         createRandomCoordinates(size, bombCount!).forEach((v) => {
             this.mine(v.x, v.y).isBomb = true;
         });
     }
-
     #adjustNeighborCount(): void {
         this.mines.forEach((mine) => {
             const neighborBombCount = this.#getNeighborMines(mine).filter(
@@ -256,6 +263,11 @@ export class MineField
         return getNeighbor({ x: mine.rowId, y: mine.colId }, this.size).map(
             (coordinate) => this.mine(coordinate.x, coordinate.y)
         );
+    }
+    #registerEvents() {
+        this.on('resolved', (mine) => this.resolve(mine as Mine));
+        this.on('bombed', (mine) => this.fail(mine as Mine));
+        this.on('opened', (mine) => this.touchNeighbor(mine as Mine));
     }
 
     protected override onRightClick(): void {}
