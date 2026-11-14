@@ -48,6 +48,13 @@ export interface MineRowConfig {
     mineGenerator: MineGenerator;
 }
 
+const eventMap = new Map<MineEvent, MineEvent>([
+    ['resolved', 'resolved'],
+    ['bombed', 'bombed'],
+    ['opened', 'opened'],
+    ['state-change', 'state-change'],
+]);
+
 /**
  * 1行分のマインスイーパーのマスを管理するUIコンポーネント。
  */
@@ -76,6 +83,7 @@ export class MineRow extends UiComponentWithChildrenBase<
             classes: [MINE_ROW_BASE_CLASS],
             childrenCount: size,
             generateChild: (colId) => mineGenerator(rowId, colId),
+            eventMap,
         });
         this.#rowId = rowId;
         this.#size = size;
