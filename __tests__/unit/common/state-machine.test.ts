@@ -55,8 +55,8 @@ function createTestContext(
     return { context, transitionToRunning };
 }
 
-void describe('unittest: StateMachine', () => {
-    void it('should transition state and invoke only matching state action handlers with context', () => {
+void describe('StateMachine の状態遷移', () => {
+    void it('状態を遷移し、遷移後の状態に対応するハンドラーだけにコンテキストを渡す', () => {
         const idleAction = mock.fn(),
             runningAction = mock.fn(),
             selectedStatesAction = mock.fn(),
@@ -120,7 +120,7 @@ void describe('unittest: StateMachine', () => {
         );
     });
 
-    void it('should not invoke state action handlers when the state does not change', () => {
+    void it('状態が変化しない場合、状態アクションハンドラーを呼び出さない', () => {
         const runningAction = mock.fn();
         const { context } = createTestContext([
             { state: 'running', action: runningAction },
@@ -137,7 +137,7 @@ void describe('unittest: StateMachine', () => {
         assert.equal(runningAction.mock.calls.length, 0);
     });
 
-    void it('should invoke the initial-state handler when reset changes the state', () => {
+    void it('reset で初期状態に戻ると、その状態のハンドラーを呼び出す', () => {
         const idleAction = mock.fn();
         const { context } = createTestContext([
             { state: 'idle', action: idleAction },

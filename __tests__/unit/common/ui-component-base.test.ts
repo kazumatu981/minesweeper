@@ -26,7 +26,7 @@ class TestUiComponent extends UiComponentBase<'test'> {
     }
 }
 
-void describe('UiComponentBase', () => {
+void describe('UI 基底クラスの振る舞い', () => {
     let mocker: Mocker;
 
     before(() => {
@@ -37,7 +37,7 @@ void describe('UiComponentBase', () => {
         restoreDocument();
     });
 
-    void it('creates a div with the configured id and classes by default', () => {
+    void it('初期設定に従って div 要素、id、クラスを生成する', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: ['first-class', 'second-class'],
@@ -48,7 +48,7 @@ void describe('UiComponentBase', () => {
         assert.deepEqual(component.classes, ['first-class', 'second-class']);
     });
 
-    void it('creates an element with the configured tag name', () => {
+    void it('指定されたタグ名の要素を生成する', () => {
         const component = new TestUiComponent({
             tagName: 'button',
             id: 'test-button',
@@ -58,7 +58,7 @@ void describe('UiComponentBase', () => {
         assert.equal(component.element.tagName, 'BUTTON');
     });
 
-    void it('exposes its element and id', () => {
+    void it('element と id を取得できる', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: [],
@@ -71,7 +71,7 @@ void describe('UiComponentBase', () => {
         assert.equal(component.id, 'test-component');
     });
 
-    void it('gets and sets its text', () => {
+    void it('text を設定すると、取得値と要素のテキストに反映する', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: [],
@@ -85,7 +85,7 @@ void describe('UiComponentBase', () => {
         assert.equal(component.element.textContent, 'Test text');
     });
 
-    void it('sets the initial text when configured', () => {
+    void it('初期設定した text を要素に反映する', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: [],
@@ -96,7 +96,7 @@ void describe('UiComponentBase', () => {
         assert.equal(component.element.textContent, 'Initial text');
     });
 
-    void it('replaces its classes when setting classes', () => {
+    void it('classes を設定すると、既存のクラスを置き換える', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: ['old-class'],
@@ -107,7 +107,7 @@ void describe('UiComponentBase', () => {
         assert.deepEqual(component.classes, ['new-class', 'another-class']);
     });
 
-    void it('calls onLeftClick when the element is clicked', () => {
+    void it('要素をクリックすると、左クリック処理を呼び出す', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: [],
@@ -119,7 +119,7 @@ void describe('UiComponentBase', () => {
         assert.equal(component.onRightClickMock.mock.callCount(), 0);
     });
 
-    void it('calls onRightClick and prevents the context menu', () => {
+    void it('要素を右クリックすると、右クリック処理を呼び出してコンテキストメニューを抑止する', () => {
         const component = new TestUiComponent({
             id: 'test-component',
             classes: [],

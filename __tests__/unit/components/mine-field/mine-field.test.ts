@@ -7,7 +7,7 @@ import {
     type Mocker,
 } from '../../util/document_mock.js';
 
-void describe('MineField', () => {
+void describe('MineField の振る舞い', () => {
     let mocker: Mocker;
 
     beforeEach(() => {
@@ -18,8 +18,8 @@ void describe('MineField', () => {
         restoreDocument();
     });
 
-    void describe('constructor', () => {
-        void it('creates rows and mines from the configured size', () => {
+    void describe('コンストラクター', () => {
+        void it('指定したサイズに応じた行とマスを生成する', () => {
             const mineField = new MineField({
                 size: 2,
                 bombs: [{ rowId: 0, colId: 0 }],
@@ -47,7 +47,7 @@ void describe('MineField', () => {
             });
         });
 
-        void it('rejects invalid board and bomb configuration', () => {
+        void it('不正な盤面サイズや地雷の設定を拒否する', () => {
             for (const size of [-1, 21]) {
                 assert.throws(() => {
                     new MineField({ size, bombs: [] });
@@ -76,8 +76,8 @@ void describe('MineField', () => {
         });
     });
 
-    void describe('events and score', () => {
-        void it('emits failed and updates the score when a bomb is opened', () => {
+    void describe('イベントとスコア', () => {
+        void it('地雷を開くと failed を通知し、スコアを更新する', () => {
             const mineField = new MineField({
                 size: 2,
                 bombs: [{ rowId: 0, colId: 0 }],
@@ -107,7 +107,7 @@ void describe('MineField', () => {
             });
         });
 
-        void it('opens neighboring empty mines and emits ended when all are resolved', () => {
+        void it('空のマスを開くと周囲も開き、すべて解決すると ended を通知する', () => {
             const mineField = new MineField({ size: 2, bombs: [] });
             let endedCount = 0;
             mineField.on('ended', () => {
@@ -133,7 +133,7 @@ void describe('MineField', () => {
             );
         });
 
-        void it('emits ended when every mine is flagged', () => {
+        void it('すべてのマスに旗を立てると ended を通知する', () => {
             const mineField = new MineField({ size: 2, bombs: [] });
             let endedCount = 0;
             mineField.on('ended', () => {
@@ -154,7 +154,7 @@ void describe('MineField', () => {
         });
     });
 
-    void it('resets with new size and bomb positions', () => {
+    void it('新しいサイズと地雷の位置で盤面をリセットする', () => {
         const mineField = new MineField({
             size: 2,
             bombs: [{ rowId: 0, colId: 0 }],

@@ -8,8 +8,8 @@ import {
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-void describe('unittest: __assertCoordinateInRange', () => {
-    void it('should not throw when coordinate is in range', () => {
+void describe('__assertCoordinateInRange による座標範囲の検証', () => {
+    void it('座標が範囲内の場合は例外を投げない', () => {
         const coordinate: Coordinate = { x: 1, y: 1 };
         const size = 3;
         assert.doesNotThrow(() => {
@@ -17,28 +17,28 @@ void describe('unittest: __assertCoordinateInRange', () => {
         });
     });
 
-    void it('should throw when coordinate is out of range. x-axis', () => {
+    void it('x 座標が範囲外の場合は例外を投げる', () => {
         const coordinate: Coordinate = { x: 3, y: 1 };
         const size = 3;
         assert.throws(() => {
             __assertCoordinateInRange(coordinate, size);
         });
     });
-    void it('should throw when coordinate is out of range. y-axis', () => {
+    void it('y 座標が範囲外の場合は例外を投げる', () => {
         const coordinate: Coordinate = { x: 1, y: 3 };
         const size = 3;
         assert.throws(() => {
             __assertCoordinateInRange(coordinate, size);
         });
     });
-    void it('should throw when coordinate is out of range. both axes', () => {
+    void it('両方の座標が範囲外の場合は例外を投げる', () => {
         const coordinate: Coordinate = { x: 3, y: 3 };
         const size = 3;
         assert.throws(() => {
             __assertCoordinateInRange(coordinate, size);
         });
     });
-    void it('should throw when coordinate is negative', () => {
+    void it('座標が負の場合は例外を投げる', () => {
         const coordinate: Coordinate = { x: -1, y: -1 };
         const size = 3;
         assert.throws(() => {
@@ -53,7 +53,7 @@ interface GetNeighborTestCase {
     expected: Coordinate[];
 }
 
-void describe('unittest: getNeighbor', () => {
+void describe('getNeighbor による隣接座標の取得', () => {
     const testCases: GetNeighborTestCase[] = [
         {
             coordinate: { x: 1, y: 1 },
@@ -92,29 +92,32 @@ void describe('unittest: getNeighbor', () => {
         },
     ];
     testCases.forEach((testCase, index) => {
-        void it(`should return correct neighbors for test case ${index + 1}`, () => {
-            const result = getNeighbor(testCase.coordinate, testCase.size);
-            assert.deepEqual(result, testCase.expected);
-        });
+        void it(
+            `ケース ${index + 1}（座標 ${testCase.coordinate.x}, ${testCase.coordinate.y}）の周囲に盤面内の座標を返す`,
+            () => {
+                const result = getNeighbor(testCase.coordinate, testCase.size);
+                assert.deepEqual(result, testCase.expected);
+            }
+        );
     });
 });
 
-void describe('unittest: isCoordinateEqual', () => {
-    void it('should return true when coordinates are equal', () => {
+void describe('isCoordinateEqual による座標の比較', () => {
+    void it('座標が等しい場合は true を返す', () => {
         assert.equal(
             isCoordinateEqual({ x: 1, y: 2 }, { x: 1, y: 2 }),
             true
         );
     });
 
-    void it('should return false when x coordinates differ', () => {
+    void it('x 座標が異なる場合は false を返す', () => {
         assert.equal(
             isCoordinateEqual({ x: 1, y: 2 }, { x: 2, y: 2 }),
             false
         );
     });
 
-    void it('should return false when y coordinates differ', () => {
+    void it('y 座標が異なる場合は false を返す', () => {
         assert.equal(
             isCoordinateEqual({ x: 1, y: 2 }, { x: 1, y: 3 }),
             false
