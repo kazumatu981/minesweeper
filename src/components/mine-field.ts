@@ -27,7 +27,7 @@ export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
 /**
  * MineFieldのイベント定義
  */
-export type MineFieldEvent = MineEvent | 'score-changed';
+export type MineFieldEvent = MineEvent | 'ended' | 'failed' | 'score-changed';
 /**
  * MineFieldアクション定義
  */
@@ -120,6 +120,7 @@ export interface MineScore {
     total: number;
     flagged: number;
     estimated: number;
+    remained: number;
 }
 
 export class MineField
@@ -157,11 +158,11 @@ export class MineField
     public readonly stateActionHandlers: MineFieldStateActionHandlers = [
         {
             state: 'ended',
-            action: (field) => (field as MineField).emit('resolved', field),
+            action: (field) => (field as MineField).emit('ended', field),
         },
         {
             state: 'failed',
-            action: (field) => (field as MineField).emit('bombed', field),
+            action: (field) => (field as MineField).emit('failed', field),
         },
     ];
 
@@ -210,6 +211,8 @@ export class MineField
             total: this.totalCount,
             flagged: this.flagged.length,
             estimated: this.estimated.length,
+            remained:
+                this.totalCount - this.flagged.length - this.estimated.length,
         };
     }
 
@@ -233,7 +236,6 @@ export class MineField
     public mine(position: MinePosition): Mine {
         return this.children[position.rowId]!.children[position.colId]!;
     }
-
     public reset(options?: MineFieldOptions): void {
         if (options) {
             this.#options = options;
@@ -243,7 +245,6 @@ export class MineField
         // 爆弾をセットする
         this.#stateMachine.applyAction('reset');
     }
-
     public fail(_mine: Mine): void {
         this.#stateMachine.applyAction('fail');
         this.emit('score-changed', this);
