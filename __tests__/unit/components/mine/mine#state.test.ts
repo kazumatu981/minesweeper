@@ -9,7 +9,7 @@ import {
     type Mocker,
 } from '../../util/document_mock.js';
 
-void describe('Mine state', () => {
+void describe('Mine の状態遷移', () => {
     const onStateChangeMock = mock.fn();
     const onBombTouchMock = mock.fn();
     const onResolvedMock = mock.fn();
@@ -50,14 +50,12 @@ void describe('Mine state', () => {
         resetCalls();
     });
 
-    void it('[initialize]', () => {
+    void it('生成直後は closed 状態で、イベントを通知しない', () => {
         const mine = new Mine({ rowId: 1, colId: 1 }, 3);
         mockEvents(mine);
 
-        // assert state
         assert.equal(mine.state, 'closed');
 
-        // assert call count
         assertCalled({
             'state-change': 0,
             resolved: 0,
@@ -66,7 +64,7 @@ void describe('Mine state', () => {
         });
     });
 
-    void it('[reset] returns a mine to its initial state', () => {
+    void it('reset すると初期状態に戻り、状態変更イベントを通知する', () => {
         const mine = new Mine({ rowId: 1, colId: 1 }, 3);
         mockEvents(mine);
         mine.neighborCount = 2;
@@ -87,17 +85,14 @@ void describe('Mine state', () => {
         });
     });
 
-    void describe('[touch]', () => {
-        void it("'closed' --> 'touched' when not a bomb", () => {
+    void describe('touch の振る舞い', () => {
+        void it('地雷でないマスに触れると touched 状態になり、関連イベントを通知する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mockEvents(mine);
 
-            // test
             mine.touch();
 
-            // test state
             assert.equal(mine.state, 'touched');
-            // test call count
             assertCalled({
                 'state-change': 1,
                 resolved: 1,
@@ -106,17 +101,14 @@ void describe('Mine state', () => {
             });
         });
 
-        void it("'closed' --> 'touched' when it is a bomb", () => {
+        void it('地雷に触れても状態とイベントは変化しない', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
             mockEvents(mine);
 
-            // test
             mine.touch();
 
-            // test state
             assert.equal(mine.state, 'closed');
-            // test call count
             assertCalled({
                 'state-change': 0,
                 resolved: 0,
@@ -126,12 +118,11 @@ void describe('Mine state', () => {
         });
     });
 
-    void describe('[right click]', () => {
-        void it("cycle trough 'closed' --> 'mustBe' --> 'mayBe' --> 'closed' when is NOT a bomb.", () => {
+    void describe('右クリック時の状態遷移', () => {
+        void it('地雷でないマスは closed → mustBe → mayBe → closed と遷移する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mockEvents(mine);
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'mustBe');
             assertCalled({
@@ -142,7 +133,6 @@ void describe('Mine state', () => {
             });
             assert.deepEqual(onResolvedMock.mock.calls[0]?.arguments, [mine]);
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'mayBe');
             assertCalled({
@@ -152,7 +142,6 @@ void describe('Mine state', () => {
                 opened: 0,
             });
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'closed');
             assertCalled({
@@ -162,12 +151,11 @@ void describe('Mine state', () => {
                 opened: 0,
             });
         });
-        void it("cycle trough 'closed' --> 'mustBe' --> 'mayBe' --> 'closed' when is a bomb.", () => {
+        void it('地雷のマスも closed → mustBe → mayBe → closed と遷移する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
             mockEvents(mine);
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'mustBe');
             assertCalled({
@@ -177,7 +165,6 @@ void describe('Mine state', () => {
                 opened: 0,
             });
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'mayBe');
             assertCalled({
@@ -187,7 +174,6 @@ void describe('Mine state', () => {
                 opened: 0,
             });
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'closed');
             assertCalled({
@@ -197,15 +183,13 @@ void describe('Mine state', () => {
                 opened: 0,
             });
         });
-        void it('opened state, right click does nothing', () => {
+        void it('opened 状態では右クリックしても状態とイベントは変化しない', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mockEvents(mine);
 
-            // click
             mocker.dispatchMouseEvent(mine.element, 'click');
             resetCalls();
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'opened');
             assertCalled({
@@ -215,16 +199,14 @@ void describe('Mine state', () => {
                 opened: 0,
             });
         });
-        void it('bomb state, right click does nothing', () => {
+        void it('bomb 状態では右クリックしても状態とイベントは変化しない', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
             mockEvents(mine);
 
-            // click
             mocker.dispatchMouseEvent(mine.element, 'click');
             resetCalls();
 
-            // right click
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.state, 'bomb');
             assertCalled({
@@ -235,13 +217,12 @@ void describe('Mine state', () => {
             });
         });
     });
-    void describe('[click]', () => {
-        void describe('state: closed', () => {
-            void it("when it's not a bomb, goes to 'open' state", () => {
+    void describe('クリック時の状態遷移', () => {
+        void describe('closed 状態', () => {
+            void it('地雷でないマスをクリックすると opened 状態になる', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'opened');
                 assertCalled({
@@ -251,12 +232,11 @@ void describe('Mine state', () => {
                     opened: 1,
                 });
             });
-            void it("when it's a bomb, goes to 'bomb' state", () => {
+            void it('地雷をクリックすると bomb 状態になる', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'bomb');
                 assertCalled({
@@ -267,15 +247,14 @@ void describe('Mine state', () => {
                 });
             });
         });
-        void describe('state: touched', () => {
-            void it('not change state. not called events', () => {
+        void describe('touched 状態', () => {
+            void it('クリックしても状態とイベントは変化しない', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mine.touch();
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'touched');
                 assertCalled({
@@ -286,8 +265,8 @@ void describe('Mine state', () => {
                 });
             });
         });
-        void describe('state: mayBe', () => {
-            void it("when it's not a bomb, goes to 'open' state", () => {
+        void describe('mayBe 状態', () => {
+            void it('地雷でないマスをクリックすると opened 状態になる', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
@@ -295,7 +274,6 @@ void describe('Mine state', () => {
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'opened');
                 assertCalled({
@@ -305,7 +283,7 @@ void describe('Mine state', () => {
                     opened: 1,
                 });
             });
-            void it("when it's a bomb, goes to 'bomb' state", () => {
+            void it('地雷をクリックすると bomb 状態になる', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
@@ -314,7 +292,6 @@ void describe('Mine state', () => {
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'bomb');
                 assertCalled({
@@ -325,15 +302,14 @@ void describe('Mine state', () => {
                 });
             });
         });
-        void describe('state: mustBe', () => {
-            void it("when  it's not a bomb, no state change", () => {
+        void describe('mustBe 状態', () => {
+            void it('地雷でないマスをクリックしても状態は変化しない', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'mustBe');
                 assertCalled({
@@ -343,7 +319,7 @@ void describe('Mine state', () => {
                     opened: 0,
                 });
             });
-            void it("when it's a bomb, no state change", () => {
+            void it('地雷をクリックしても状態は変化しない', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
@@ -351,7 +327,6 @@ void describe('Mine state', () => {
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'mustBe');
                 assertCalled({
@@ -362,8 +337,8 @@ void describe('Mine state', () => {
                 });
             });
         });
-        void describe('state: bomb', () => {
-            void it("when  it's a bomb, no state change", () => {
+        void describe('bomb 状態', () => {
+            void it('クリックしても状態は変化しない', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
@@ -371,7 +346,6 @@ void describe('Mine state', () => {
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'bomb');
                 assertCalled({
@@ -382,15 +356,14 @@ void describe('Mine state', () => {
                 });
             });
         });
-        void describe('state: open', () => {
-            void it("when  it's opened, no state change", () => {
+        void describe('opened 状態', () => {
+            void it('クリックしても状態は変化しない', () => {
                 const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 resetCalls();
 
-                // click
                 mocker.dispatchMouseEvent(mine.element, 'click');
                 assert.equal(mine.state, 'opened');
                 assertCalled({

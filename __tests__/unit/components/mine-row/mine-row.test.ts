@@ -4,7 +4,7 @@ import { MineRow } from '../../../../src/components/mine-row.js';
 import { Mine } from '../../../../src/components/mine.js';
 import { mockDocument, restoreDocument } from '../../util/document_mock.js';
 
-void describe('MineRow: constructor', () => {
+void describe('MineRow のコンストラクター', () => {
     beforeEach(() => {
         mockDocument();
     });
@@ -13,7 +13,7 @@ void describe('MineRow: constructor', () => {
         restoreDocument();
     });
 
-    void it('stores the row ID and size', () => {
+    void it('行 ID とサイズを保持する', () => {
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
@@ -25,7 +25,7 @@ void describe('MineRow: constructor', () => {
         assert.equal(mineRow.size, 3);
     });
 
-    void it('generates one mine for each column in order', () => {
+    void it('各列に対応するマスを順番に生成する', () => {
         const generatedCoordinates: [number, number][] = [];
         const mineRow = new MineRow({
             rowId: 2,
@@ -55,7 +55,7 @@ void describe('MineRow: constructor', () => {
         );
     });
 
-    void it('sets the base class and a row-specific ID', () => {
+    void it('基底クラスと行固有の ID を設定する', () => {
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
@@ -68,7 +68,7 @@ void describe('MineRow: constructor', () => {
         assert.equal(mineRow.element.tagName.toLowerCase(), 'div');
     });
 
-    void it('accepts the maximum size and last valid row ID', () => {
+    void it('最大サイズと、そのサイズで有効な最後の行 ID を受け入れる', () => {
         const mineRow = new MineRow({
             rowId: 19,
             size: 20,
@@ -81,7 +81,7 @@ void describe('MineRow: constructor', () => {
         assert.equal(mineRow.children.length, 20);
     });
 
-    void it('rejects sizes outside the supported range', () => {
+    void it('サポート範囲外のサイズを拒否する', () => {
         for (const size of [-1, 21]) {
             assert.throws(() => {
                 new MineRow({
@@ -103,7 +103,7 @@ void describe('MineRow: constructor', () => {
         });
     });
 
-    void it('rejects row IDs outside the range for the configured size', () => {
+    void it('設定サイズの範囲外の行 ID を拒否する', () => {
         for (const rowId of [-1, 3]) {
             assert.throws(() => {
                 new MineRow({

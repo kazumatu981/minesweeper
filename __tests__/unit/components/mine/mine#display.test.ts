@@ -7,7 +7,7 @@ import {
     type Mocker,
 } from '../../util/document_mock.js';
 
-void describe('Mine display', () => {
+void describe('Mine の表示', () => {
     let mocker: Mocker;
 
     beforeEach(() => {
@@ -18,14 +18,14 @@ void describe('Mine display', () => {
         restoreDocument();
     });
 
-    void describe('text', () => {
-        void it('shows a blank for the closed state', () => {
+    void describe('テキスト', () => {
+        void it('closed 状態では空白を表示する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             assert.equal(mine.text, ' ');
         });
 
-        void it('shows the flag and question mark for marked states', () => {
+        void it('マーク状態に応じて旗と疑問符を表示する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -35,7 +35,7 @@ void describe('Mine display', () => {
             assert.equal(mine.text, '?');
         });
 
-        void it('shows the neighbor count, or blank when it is zero, when opened', () => {
+        void it('開いたとき、隣接マス数を表示し、0 の場合は空白を表示する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mine.neighborCount = 0;
@@ -48,7 +48,7 @@ void describe('Mine display', () => {
             assert.equal(mine.text, '3');
         });
 
-        void it('shows the neighbor count, or blank when it is zero, when touched', () => {
+        void it('触れたとき、隣接マス数を表示し、0 の場合は空白を表示する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mine.neighborCount = 0;
@@ -61,7 +61,7 @@ void describe('Mine display', () => {
             assert.equal(mine.text, '3');
         });
 
-        void it('shows B for a bomb', () => {
+        void it('地雷を開くと B を表示する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
 
@@ -71,8 +71,8 @@ void describe('Mine display', () => {
         });
     });
 
-    void describe('classes', () => {
-        void it('uses the base and closed-state classes initially', () => {
+    void describe('CSS クラス', () => {
+        void it('初期状態では基底クラスと closed 状態のクラスを設定する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             assert.deepEqual(mine.classes, [
@@ -81,7 +81,7 @@ void describe('Mine display', () => {
             ]);
         });
 
-        void it('updates the state class for marked states', () => {
+        void it('マーク状態に応じて状態クラスを更新する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -97,7 +97,7 @@ void describe('Mine display', () => {
             ]);
         });
 
-        void it('includes the neighbor-count class when opened', () => {
+        void it('開いたときに隣接マス数のクラスを含める', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.neighborCount = 3;
 
@@ -110,7 +110,7 @@ void describe('Mine display', () => {
             ]);
         });
 
-        void it('includes the neighbor-count class when touched', () => {
+        void it('触れたときに隣接マス数のクラスを含める', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.neighborCount = 3;
 
@@ -123,7 +123,7 @@ void describe('Mine display', () => {
             ]);
         });
 
-        void it('uses the bomb-state class for a bomb', () => {
+        void it('地雷を開いたときに地雷状態のクラスを設定する', () => {
             const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
 

@@ -7,8 +7,8 @@ import {
     type EventRegistryEntry,
 } from '../../../src/common/events.js';
 
-void describe('unittest: EventRegistry.append', () => {
-    void it('should register a handler for a new event', () => {
+void describe('EventRegistry.append によるイベントハンドラーの登録', () => {
+    void it('新しいイベントにハンドラーを登録する', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
 
@@ -18,7 +18,7 @@ void describe('unittest: EventRegistry.append', () => {
             { callback, condition: undefined },
         ]);
     });
-    void it('should register multiple handlers for the same event', () => {
+    void it('同じイベントに複数のハンドラーを登録する', () => {
         const registry = new EventRegistry<'test'>();
         const firstCallback = mock.fn();
         const secondCallback = mock.fn();
@@ -37,7 +37,7 @@ void describe('unittest: EventRegistry.append', () => {
             { callback: secondCallback, condition: undefined },
         ]);
     });
-    void it('should not register the same callback and condition more than once', () => {
+    void it('同じコールバックと条件の組み合わせを重複登録しない', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
         const condition = mock.fn(() => true);
@@ -48,7 +48,7 @@ void describe('unittest: EventRegistry.append', () => {
 
         assert.deepEqual(registry.get('test'), [registration]);
     });
-    void it('should register the same callback with a different condition', () => {
+    void it('同じコールバックでも条件が異なれば登録する', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
         const firstCondition = mock.fn(() => true);
@@ -62,7 +62,7 @@ void describe('unittest: EventRegistry.append', () => {
             { callback, condition: secondCondition },
         ]);
     });
-    void it('should register different callbacks with the same condition', () => {
+    void it('条件が同じでもコールバックが異なれば登録する', () => {
         const registry = new EventRegistry<'test'>();
         const firstCallback = mock.fn();
         const secondCallback = mock.fn();
@@ -84,8 +84,8 @@ void describe('unittest: EventRegistry.append', () => {
     });
 });
 
-void describe('unittest: EventRegistry.emitFor', () => {
-    void it('should invoke handlers for the specified event in registration order', () => {
+void describe('EventRegistry.emitFor によるイベントの通知', () => {
+    void it('指定したイベントのハンドラーを登録順に呼び出す', () => {
         const registry = new EventRegistry<'first' | 'second'>();
         const calls: string[] = [];
         const firstHandler = mock.fn(() => calls.push('first handler 1'));
@@ -109,7 +109,7 @@ void describe('unittest: EventRegistry.emitFor', () => {
 
         assert.deepEqual(calls, ['first handler 1', 'first handler 2']);
     });
-    void it('should pass arguments to handlers', () => {
+    void it('イベント引数をハンドラーに渡す', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
 
@@ -122,7 +122,7 @@ void describe('unittest: EventRegistry.emitFor', () => {
 
         assert.deepEqual(callback.mock.calls[0]?.arguments, ['hello', 42]);
     });
-    void it('should invoke a handler when its condition is satisfied', () => {
+    void it('条件を満たしたハンドラーを呼び出す', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
         const condition = mock.fn((value: unknown) => value === 'run');
@@ -139,7 +139,7 @@ void describe('unittest: EventRegistry.emitFor', () => {
         assert.equal(callback.mock.calls.length, 1);
         assert.deepEqual(callback.mock.calls[0]?.arguments, ['run']);
     });
-    void it('should not invoke a handler when its condition is not satisfied', () => {
+    void it('条件を満たさないハンドラーを呼び出さない', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
         const condition = mock.fn((value: unknown) => value === 'run');
@@ -155,7 +155,7 @@ void describe('unittest: EventRegistry.emitFor', () => {
         assert.deepEqual(condition.mock.calls[0]?.arguments, ['skip']);
         assert.equal(callback.mock.calls.length, 0);
     });
-    void it('should invoke a handler without a condition', () => {
+    void it('条件が指定されていないハンドラーを呼び出す', () => {
         const registry = new EventRegistry<'test'>();
         const callback = mock.fn();
 
@@ -168,15 +168,15 @@ void describe('unittest: EventRegistry.emitFor', () => {
 
         assert.equal(callback.mock.calls.length, 1);
     });
-    void it('should not throw when no handlers are registered for the event', () => {
+    void it('ハンドラー未登録のイベントを通知しても例外を投げない', () => {
         const registry = new EventRegistry<'test'>();
 
         assert.doesNotThrow(() => registry.emitFor('test'));
     });
 });
 
-void describe('unittest: EventRegistry.from', () => {
-    void it('should create a registry from event entries', () => {
+void describe('EventRegistry.from によるレジストリの生成', () => {
+    void it('イベントエントリーからレジストリを生成する', () => {
         const firstCallback = mock.fn();
         const secondCallback = mock.fn();
         const entries: EventRegistryEntry<'first' | 'second'>[] = [
@@ -205,14 +205,14 @@ void describe('unittest: EventRegistry.from', () => {
     });
 });
 
-void describe('unittest: EventDispatcher', () => {
+void describe('EventDispatcher のイベント通知', () => {
     class TestDispatcher extends EventDispatcher<'test'> {
         public fire(...args: unknown[]): void {
             this.emit('test', ...args);
         }
     }
 
-    void it('should invoke a handler registered with on when the event is emitted', () => {
+    void it('イベントを通知すると on で登録したハンドラーを呼び出す', () => {
         const dispatcher = new TestDispatcher();
         const callback = mock.fn();
 
@@ -221,7 +221,7 @@ void describe('unittest: EventDispatcher', () => {
 
         assert.equal(callback.mock.calls.length, 1);
     });
-    void it('should pass arguments to registered handlers', () => {
+    void it('イベント引数を登録済みハンドラーに渡す', () => {
         const dispatcher = new TestDispatcher();
         const callback = mock.fn();
 
@@ -230,7 +230,7 @@ void describe('unittest: EventDispatcher', () => {
 
         assert.deepEqual(callback.mock.calls[0]?.arguments, ['hello', 42]);
     });
-    void it('should invoke a registered handler only when its condition is satisfied', () => {
+    void it('条件を満たした場合に限り登録済みハンドラーを呼び出す', () => {
         const dispatcher = new TestDispatcher();
         const callback = mock.fn();
         const condition = mock.fn((value: unknown) => value === 'run');
@@ -247,7 +247,7 @@ void describe('unittest: EventDispatcher', () => {
         assert.equal(callback.mock.calls.length, 1);
         assert.deepEqual(callback.mock.calls[0]?.arguments, ['run']);
     });
-    void it('should not register the same callback and condition more than once', () => {
+    void it('同じコールバックと条件の組み合わせを重複登録しない', () => {
         const dispatcher = new TestDispatcher();
         const callback = mock.fn();
         const condition = mock.fn(() => true);
