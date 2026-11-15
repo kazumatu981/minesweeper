@@ -1,16 +1,18 @@
 import {
-    __assertBetween,
-    StateMachine,
     type DecisionTable,
     type DecisionTableDictionary,
     type StateActionHandlers,
     type StateMachineContext,
     type StateMachineEvents,
+    __assertBetween,
+    StateMachine,
     UiComponentBase,
     formatClass,
     formatId,
     createRandomString,
 } from '../common/index.js';
+
+import { type MinePosition, getNeighborPositions } from './mine-position.js';
 
 //#region 状態、イベント、アクションの定義
 /**
@@ -56,12 +58,12 @@ const ID_CHARACTERS =
  * @param colId 列番号
  * @returns 行番号と列番号を含むMineの識別子
  */
-function formatMineId(rowId: number, colId: number): string {
+function formatMineId(position: MinePosition): string {
     return formatId(
         MINE_PREFIX,
         createRandomString(8, ID_CHARACTERS),
-        rowId,
-        colId
+        position.rowId,
+        position.colId
     );
 }
 //#endregion
@@ -133,10 +135,10 @@ export class Mine
     implements StateMachineContext<MineState, MineAction, Mine>
 {
     //#region プロパティの内部ストア
-    /** 行番号 */
-    readonly #rowId;
-    /** 列番号 */
-    readonly #colId;
+    /** 場所 */
+    readonly #position;
+    /** 盤面のサイズ */
+    readonly #size;
     /** 近隣の爆弾数 */
     #neighborBombCount = 0;
     /** 爆弾かどうか */
@@ -256,18 +258,18 @@ export class Mine
      * @param rowId 行番号
      * @param colId 列番号
      */
-    public constructor(rowId: number, colId: number) {
+    public constructor(position: MinePosition, size: number) {
         // 親クラスのコンストラクタ
         super({
-            id: formatMineId(rowId, colId),
+            id: formatMineId(position),
             classes: [],
         });
         this.#sateMachine = new StateMachine<MineState, MineAction, Mine>(
             'closed',
             this
         );
-        this.#rowId = rowId;
-        this.#colId = colId;
+        this.#position = position;
+        this.#size = size;
 
         // 表面を調整する
         this.#adjustFace();
@@ -281,7 +283,7 @@ export class Mine
      * @returns 行番号
      */
     public get rowId(): number {
-        return this.#rowId;
+        return this.#position.rowId;
     }
 
     /**
@@ -290,7 +292,7 @@ export class Mine
      * @returns 列番号
      */
     public get colId(): number {
-        return this.#colId;
+        return this.#position.colId;
     }
 
     /**
@@ -359,6 +361,14 @@ export class Mine
      */
     public touch() {
         this.#sateMachine.applyAction('touch');
+    }
+
+    /**
+     * 近くのMineの位置を取得する
+     * @returns 近くのMineの位置
+     */
+    public get neighborPositions(): MinePosition[] {
+        return getNeighborPositions(this.#position, this.#size);
     }
 
     //#region イベントハンドラ

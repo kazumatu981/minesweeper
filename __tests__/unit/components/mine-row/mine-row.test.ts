@@ -17,7 +17,8 @@ void describe('MineRow: constructor', () => {
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
-            mineGenerator: (rowId, colId) => new Mine(rowId, colId),
+            mineGenerator: (rowId, colId) =>
+                new Mine({ rowId, colId }, 3),
         });
 
         assert.equal(mineRow.rowId, 2);
@@ -31,7 +32,7 @@ void describe('MineRow: constructor', () => {
             size: 3,
             mineGenerator: (rowId, colId) => {
                 generatedCoordinates.push([rowId, colId]);
-                return new Mine(rowId, colId);
+                return new Mine({ rowId, colId }, 3);
             },
         });
 
@@ -58,7 +59,8 @@ void describe('MineRow: constructor', () => {
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
-            mineGenerator: (rowId, colId) => new Mine(rowId, colId),
+            mineGenerator: (rowId, colId) =>
+                new Mine({ rowId, colId }, 3),
         });
 
         assert.deepEqual(mineRow.classes, ['___mine_row_base']);
@@ -70,7 +72,8 @@ void describe('MineRow: constructor', () => {
         const mineRow = new MineRow({
             rowId: 19,
             size: 20,
-            mineGenerator: (rowId, colId) => new Mine(rowId, colId),
+            mineGenerator: (rowId, colId) =>
+                new Mine({ rowId, colId }, 20),
         });
 
         assert.equal(mineRow.rowId, 19);
@@ -84,7 +87,8 @@ void describe('MineRow: constructor', () => {
                 new MineRow({
                     rowId: 0,
                     size,
-                    mineGenerator: (rowId, colId) => new Mine(rowId, colId),
+                    mineGenerator: (rowId, colId) =>
+                        new Mine({ rowId, colId }, size),
                 });
             });
         }
@@ -93,7 +97,8 @@ void describe('MineRow: constructor', () => {
             new MineRow({
                 rowId: 0,
                 size: 0,
-                mineGenerator: (rowId, colId) => new Mine(rowId, colId),
+                mineGenerator: (rowId, colId) =>
+                    new Mine({ rowId, colId }, 0),
             });
         });
     });
@@ -105,7 +110,7 @@ void describe('MineRow: constructor', () => {
                     rowId,
                     size: 3,
                     mineGenerator: (generatedRowId, colId) =>
-                        new Mine(generatedRowId, colId),
+                        new Mine({ rowId: generatedRowId, colId }, 3),
                 });
             });
         }

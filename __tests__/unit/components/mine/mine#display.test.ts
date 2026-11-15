@@ -20,13 +20,13 @@ void describe('Mine display', () => {
 
     void describe('text', () => {
         void it('shows a blank for the closed state', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             assert.equal(mine.text, ' ');
         });
 
         void it('shows the flag and question mark for marked states', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.equal(mine.text, 'F');
@@ -36,7 +36,7 @@ void describe('Mine display', () => {
         });
 
         void it('shows the neighbor count, or blank when it is zero, when opened', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mine.neighborCount = 0;
             mocker.dispatchMouseEvent(mine.element, 'click');
@@ -49,7 +49,7 @@ void describe('Mine display', () => {
         });
 
         void it('shows the neighbor count, or blank when it is zero, when touched', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mine.neighborCount = 0;
             mine.touch();
@@ -62,7 +62,7 @@ void describe('Mine display', () => {
         });
 
         void it('shows B for a bomb', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
 
             mocker.dispatchMouseEvent(mine.element, 'click');
@@ -73,7 +73,7 @@ void describe('Mine display', () => {
 
     void describe('classes', () => {
         void it('uses the base and closed-state classes initially', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             assert.deepEqual(mine.classes, [
                 '___mine_base',
@@ -82,7 +82,7 @@ void describe('Mine display', () => {
         });
 
         void it('updates the state class for marked states', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
 
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             assert.deepEqual(mine.classes, [
@@ -98,7 +98,7 @@ void describe('Mine display', () => {
         });
 
         void it('includes the neighbor-count class when opened', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.neighborCount = 3;
 
             mocker.dispatchMouseEvent(mine.element, 'click');
@@ -111,7 +111,7 @@ void describe('Mine display', () => {
         });
 
         void it('includes the neighbor-count class when touched', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.neighborCount = 3;
 
             mine.touch();
@@ -124,7 +124,7 @@ void describe('Mine display', () => {
         });
 
         void it('uses the bomb-state class for a bomb', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
 
             mocker.dispatchMouseEvent(mine.element, 'click');

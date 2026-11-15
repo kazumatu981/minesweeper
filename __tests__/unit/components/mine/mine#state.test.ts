@@ -51,7 +51,7 @@ void describe('Mine state', () => {
     });
 
     void it('[initialize]', () => {
-        const mine = new Mine(1, 1);
+        const mine = new Mine({ rowId: 1, colId: 1 }, 3);
         mockEvents(mine);
 
         // assert state
@@ -67,7 +67,7 @@ void describe('Mine state', () => {
     });
 
     void it('[reset] returns a mine to its initial state', () => {
-        const mine = new Mine(1, 1);
+        const mine = new Mine({ rowId: 1, colId: 1 }, 3);
         mockEvents(mine);
         mine.neighborCount = 2;
         mine.touch();
@@ -89,7 +89,7 @@ void describe('Mine state', () => {
 
     void describe('[touch]', () => {
         void it("'closed' --> 'touched' when not a bomb", () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mockEvents(mine);
 
             // test
@@ -107,7 +107,7 @@ void describe('Mine state', () => {
         });
 
         void it("'closed' --> 'touched' when it is a bomb", () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
             mockEvents(mine);
 
@@ -128,7 +128,7 @@ void describe('Mine state', () => {
 
     void describe('[right click]', () => {
         void it("cycle trough 'closed' --> 'mustBe' --> 'mayBe' --> 'closed' when is NOT a bomb.", () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mockEvents(mine);
 
             // right click
@@ -163,7 +163,7 @@ void describe('Mine state', () => {
             });
         });
         void it("cycle trough 'closed' --> 'mustBe' --> 'mayBe' --> 'closed' when is a bomb.", () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
             mockEvents(mine);
 
@@ -198,7 +198,7 @@ void describe('Mine state', () => {
             });
         });
         void it('opened state, right click does nothing', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mockEvents(mine);
 
             // click
@@ -216,7 +216,7 @@ void describe('Mine state', () => {
             });
         });
         void it('bomb state, right click does nothing', () => {
-            const mine = new Mine(1, 1);
+            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
             mine.isBomb = true;
             mockEvents(mine);
 
@@ -238,7 +238,7 @@ void describe('Mine state', () => {
     void describe('[click]', () => {
         void describe('state: closed', () => {
             void it("when it's not a bomb, goes to 'open' state", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 // click
@@ -252,7 +252,7 @@ void describe('Mine state', () => {
                 });
             });
             void it("when it's a bomb, goes to 'bomb' state", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -269,7 +269,7 @@ void describe('Mine state', () => {
         });
         void describe('state: touched', () => {
             void it('not change state. not called events', () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mine.touch();
@@ -288,7 +288,7 @@ void describe('Mine state', () => {
         });
         void describe('state: mayBe', () => {
             void it("when it's not a bomb, goes to 'open' state", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -306,7 +306,7 @@ void describe('Mine state', () => {
                 });
             });
             void it("when it's a bomb, goes to 'bomb' state", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -327,7 +327,7 @@ void describe('Mine state', () => {
         });
         void describe('state: mustBe', () => {
             void it("when  it's not a bomb, no state change", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -344,7 +344,7 @@ void describe('Mine state', () => {
                 });
             });
             void it("when it's a bomb, no state change", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -364,7 +364,7 @@ void describe('Mine state', () => {
         });
         void describe('state: bomb', () => {
             void it("when  it's a bomb, no state change", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -384,7 +384,7 @@ void describe('Mine state', () => {
         });
         void describe('state: open', () => {
             void it("when  it's opened, no state change", () => {
-                const mine = new Mine(1, 1);
+                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'click');

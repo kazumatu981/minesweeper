@@ -20,34 +20,32 @@ void describe('Mine: constructor', () => {
      */
     void describe('initial values', () => {
         void it('rowId/colId: number which is set in constructor', () => {
-            const mine = new Mine(2, 3);
+            const mine = new Mine({ rowId: 2, colId: 3 }, 5);
 
             assert.equal(mine.rowId, 2);
             assert.equal(mine.colId, 3);
         });
         void it('state: closed', () => {
-            const mine = new Mine(1, 2);
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
 
             assert.equal(mine.state, 'closed');
         });
         void it('isBomb: false', () => {
-            const mine = new Mine(1, 2);
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
 
             assert.equal(mine.isBomb, false);
         });
         void it('neighborCount: 0', () => {
-            const mine = new Mine(1, 2);
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
             assert.equal(mine.neighborCount, 0);
         });
         void it('element: not undefined', () => {
-            const mine = new Mine(1, 2);
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
             assert.notEqual(mine.element, undefined);
         });
-        void it('id: ___mine-<rowId>-<colId>', () => {
-            const expectedId = '___mine-1-2';
-
-            const mine = new Mine(1, 2);
-            assert.equal(mine.id.startsWith(expectedId), true);
+        void it('id: ___mine-<rowId>-<colId>-<random>', () => {
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
+            assert.match(mine.id, /^___mine-1-2-[A-Za-z0-9]{8}$/);
         });
     });
 
@@ -56,14 +54,13 @@ void describe('Mine: constructor', () => {
      */
     void describe('DOM element', () => {
         void it('should be create DIV element', () => {
-            const mine = new Mine(1, 2);
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
 
             assert.equal(mine.element.tagName.toLowerCase(), 'div');
         });
         void it('elements id must be expected', () => {
-            const expectedId = '___mine-1-2';
-            const mine = new Mine(1, 2);
-            assert.equal(mine.element.id.startsWith(expectedId), true);
+            const mine = new Mine({ rowId: 1, colId: 2 }, 3);
+            assert.match(mine.element.id, /^___mine-1-2-[A-Za-z0-9]{8}$/);
         });
     });
 });
