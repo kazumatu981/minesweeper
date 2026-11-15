@@ -64,6 +64,7 @@ export default defineConfig([
         files: ['**/*.ts'],
         rules: {
             'no-unused-vars': 'off',
+            '@typescript-eslint/explicit-member-accessibility': 'error',
             '@typescript-eslint/no-unused-vars': [
                 'error',
                 {

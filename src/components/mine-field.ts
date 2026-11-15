@@ -1,161 +1,292 @@
-import { EventHandler, createRandom } from '../common/index.js';
 import {
-    type MineFieldEvent,
-    MINE_FIELD_BASE_CLASS,
-    formatMineFieldId,
-} from './utils/index.js';
+    type StateMachineContext,
+    type StateActionHandlers,
+    type DecisionTableDictionary,
+    StateMachine,
+    UiComponentWithChildrenBase,
+    formatClass,
+    formatId,
+    createRandomString,
+    __assertBetween,
+    __assertIsUndefined,
+    __assertIsDefined,
+} from '../common/index.js';
+import {
+    type MinesOption,
+    type MinePosition,
+    safeGetBomPositions,
+} from './mine-position.js';
 import { MineRow } from './mine-row.js';
-import { type Mine } from './mine.js';
+import { Mine, type MineEvent } from './mine.js';
 
-interface MinePosition {
-    rowId: number;
-    colId: number;
+//#region 状態、イベント、アクションの定義
+/**
+ * MineFieldの状態定義
+ */
+export type MineFieldState = 'initialized' | 'started' | 'ended' | 'failed';
+/**
+ * MineFieldのイベント定義
+ */
+export type MineFieldEvent = MineEvent | 'ended' | 'failed' | 'score-changed';
+/**
+ * MineFieldアクション定義
+ */
+type MineFieldAction =
+    /** 解答に近づいた */
+    | 'resolve'
+    /** 失敗した */
+    | 'fail'
+    /** リセットした */
+    | 'reset';
+/**
+ * サイズの最大値
+ */
+const SIZE_MAX = 20;
+//#endregion
+
+//#region 識別子, クラス
+const MINE_FIELD_PREFIX = '___mine_field';
+const ID_CHARACTERS =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+/**
+ * 固有な識別子を作成する
+ * @returns 識別子
+ */
+function formatMineFieldId(): string {
+    return formatId(MINE_FIELD_PREFIX, createRandomString(8, ID_CHARACTERS));
 }
+/**
+ * MineFieldCSSクラス名
+ */
+const MINE_FIELD_BASE_CLASS = formatClass(MINE_FIELD_PREFIX, 'base');
+//#endregion
 
-function createMines(size: number, count: number): MinePosition[] {
-    const mines: MinePosition[] = [];
-    for (let i = 0; i < count; i++) {
-        let rowId: number, colId: number;
-        do {
-            rowId = createRandom(0, size - 1);
-            colId = createRandom(0, size - 1);
-        } while (mines.some((m) => m.rowId === rowId && m.colId === colId));
-        mines.push({ rowId, colId });
-    }
-    return mines;
-}
+//#region MineFieldの設定
 
-export interface MineFieldOptions {
+/**
+ * MineFieldオプション
+ */
+export interface MineFieldOptions extends MinesOption {
     size: number;
-    mineCount: number;
 }
 
-export class MineField extends EventHandler<MineFieldEvent> {
-    #options: MineFieldOptions;
-    #rows: MineRow[] = [];
-    readonly #element: HTMLDivElement;
+function __assertBombOptions(mineFieldOptions: MineFieldOptions) {
+    __assertBetween(mineFieldOptions.size, 0, SIZE_MAX);
+    if (mineFieldOptions.bombs !== undefined) {
+        __assertIsUndefined(mineFieldOptions.bombCount);
+        mineFieldOptions.bombs.forEach((bombPosition) => {
+            __assertBetween(bombPosition.rowId, 0, mineFieldOptions.size);
+            __assertBetween(bombPosition.colId, 0, mineFieldOptions.size);
+        });
+        __assertBetween(
+            mineFieldOptions.bombs.length,
+            0,
+            mineFieldOptions.size * mineFieldOptions.size
+        );
+    } else {
+        __assertIsDefined(mineFieldOptions.bombCount);
+        __assertBetween(
+            mineFieldOptions.bombCount!,
+            0,
+            mineFieldOptions.size * mineFieldOptions.size
+        );
+    }
+}
+//#endregion
 
-    constructor(options: MineFieldOptions) {
-        super();
+//#region 状態遷移テーブル、状態アクションハンドラ (StateMachineContextの実装として使用する)
+/**
+ * 状態遷移テーブル
+ */
+type StateMachineTransitionTable = DecisionTableDictionary<
+    MineFieldAction,
+    MineFieldState,
+    MineField
+>;
+/**
+ * 状態に応じた述語関数決定テーブル
+ */
+type MineFieldStateActionHandlers = StateActionHandlers<MineFieldState>;
+//#endregion
+
+const eventMap = new Map<MineEvent, MineFieldEvent>([
+    ['bombed', 'bombed'],
+    ['resolved', 'resolved'],
+    ['opened', 'opened'],
+    ['state-change', 'state-change'],
+]);
+
+export interface MineScore {
+    total: number;
+    flagged: number;
+    estimated: number;
+    remained: number;
+}
+
+export class MineField
+    extends UiComponentWithChildrenBase<MineFieldEvent, MineEvent, MineRow>
+    implements StateMachineContext<MineFieldState, MineFieldAction, MineField>
+{
+    #options: MineFieldOptions;
+    readonly #stateMachine: StateMachine<
+        MineFieldState,
+        MineFieldAction,
+        MineField
+    >;
+
+    public readonly transitionTable: StateMachineTransitionTable = {
+        resolve: {
+            initialized: (field) => (field.isEnded ? 'ended' : 'started'),
+            started: (field) => (field.isEnded ? 'ended' : 'started'),
+            ended: (_) => 'ended',
+            failed: (_) => 'failed',
+        },
+        fail: {
+            initialized: (_) => 'failed',
+            started: (_) => 'failed',
+            ended: (_) => 'ended',
+            failed: (_) => 'failed',
+        },
+        reset: {
+            initialized: (_) => 'initialized',
+            started: (_) => 'initialized',
+            ended: (_) => 'initialized',
+            failed: (_) => 'initialized',
+        },
+    };
+
+    public readonly stateActionHandlers: MineFieldStateActionHandlers = [
+        {
+            state: 'ended',
+            action: (field) => (field as MineField).emit('ended', field),
+        },
+        {
+            state: 'failed',
+            action: (field) => (field as MineField).emit('failed', field),
+        },
+    ];
+
+    public constructor(options: MineFieldOptions) {
+        super({
+            id: formatMineFieldId(),
+            classes: [MINE_FIELD_BASE_CLASS],
+            childrenCount: options.size,
+            generateChild: (rowId) =>
+                new MineRow({
+                    rowId,
+                    size: options.size,
+                    mineGenerator: (rowId, colId) =>
+                        new Mine({ rowId, colId }, options.size),
+                }),
+            eventMap,
+        });
+
+        this.#stateMachine = new StateMachine<
+            MineFieldState,
+            MineFieldAction,
+            MineField
+        >('initialized', this);
 
         this.#options = options;
-        this.#element = this.#generateRoot();
 
-        this.resetField(options.size, options.mineCount);
+        this.#registerEvents();
 
-        this.on('opened', this.onOpened.bind(this));
+        this.reset();
     }
 
-    get size(): number {
+    public get size(): number {
         return this.#options.size;
     }
 
-    get rows(): MineRow[] {
-        return this.#rows;
+    public get rows(): readonly MineRow[] {
+        return this.children;
     }
 
-    get mines(): Mine[] {
-        return this.#rows.flatMap((row) => row.mines);
-    }
-    get element(): HTMLDivElement {
-        return this.#element;
+    public get mines(): Mine[] {
+        return this.children.flatMap((row) => row.children);
     }
 
-    mine(rowId: number, colId: number): Mine {
-        return this.#rows[rowId]!.mines[colId]!;
+    public get score(): MineScore {
+        return {
+            total: this.totalCount,
+            flagged: this.flagged.length,
+            estimated: this.estimated.length,
+            remained:
+                this.totalCount - this.flagged.length - this.estimated.length,
+        };
     }
 
-    resetField(size: number, mineCount: number) {
-        this.#options.size = size;
-        this.#options.mineCount = mineCount;
+    private get isEnded(): boolean {
+        const score = this.score;
+        return score.estimated + score.flagged === score.total;
+    }
 
-        // 行をセットする
-        this.#rows = this.#generateRows();
+    private get totalCount(): number {
+        return this.size * this.size;
+    }
+    private get flagged(): Mine[] {
+        return this.mines.filter((mine) => mine.state === 'mustBe');
+    }
+    private get estimated(): Mine[] {
+        return this.mines.filter(
+            (mine) => mine.state === 'opened' || mine.state === 'touched'
+        );
+    }
 
+    public mine(position: MinePosition): Mine {
+        return this.children[position.rowId]!.children[position.colId]!;
+    }
+    public reset(options?: MineFieldOptions): void {
+        if (options) {
+            this.#options = options;
+            this.resetChildren(this.#options.size);
+        }
+        this.#initialize();
         // 爆弾をセットする
-        this.#setMines();
-
-        // イベントをセットする
-        this.#setEvents();
+        this.#stateMachine.applyAction('reset');
     }
-
-    onOpened(thisField: MineField, senderMine: unknown) {
-        const neighbors = thisField.#getNeighborMines(senderMine as Mine);
-        neighbors.forEach((mine) => {
-            if (mine !== senderMine) {
-                mine.touch();
-            }
-        });
+    public fail(_mine: Mine): void {
+        this.#stateMachine.applyAction('fail');
+        this.emit('score-changed', this);
     }
-
-    #generateRoot(): HTMLDivElement {
-        const fieldElement = document.createElement('div');
-        fieldElement.id = formatMineFieldId();
-        fieldElement.classList.add(MINE_FIELD_BASE_CLASS);
-        return fieldElement;
+    public resolve(_mine: Mine): void {
+        this.#stateMachine.applyAction('resolve');
+        this.emit('score-changed', this);
     }
-    #getNeighborMines(mine: Mine): Mine[] {
-        const rowId = mine.rowId;
-        const colId = mine.colId;
-        const neighbors: Mine[] = [
-            { rowId: rowId - 1, colId: colId - 1 },
-            { rowId: rowId - 1, colId: colId },
-            { rowId: rowId - 1, colId: colId + 1 },
-            { rowId: rowId, colId: colId - 1 },
-            { rowId: rowId, colId: colId },
-            { rowId: rowId, colId: colId + 1 },
-            { rowId: rowId + 1, colId: colId - 1 },
-            { rowId: rowId + 1, colId: colId },
-            { rowId: rowId + 1, colId: colId + 1 },
-        ]
-            .filter(
-                ({ rowId: r, colId: c }) =>
-                    r >= 0 &&
-                    r < this.#options.size &&
-                    c >= 0 &&
-                    c < this.#options.size
-            )
-            .map(({ rowId: r, colId: c }) => this.mine(r, c));
-
-        return neighbors;
-    }
-    #generateRows(): MineRow[] {
-        // 行を作成する
-        const rows: MineRow[] = Array.from({ length: this.#options.size }).map(
-            (_, rowId) => new MineRow(rowId, this.#options.size)
-        );
-
-        this.element.replaceChildren();
-        rows.forEach((row) => {
-            this.element.appendChild(row.element);
-        });
-
-        return rows;
-    }
-    #setMines() {
-        const minePositions = createMines(
-            this.#options.size,
-            this.#options.mineCount
-        );
-        minePositions.forEach(({ rowId, colId }) => {
-            this.mine(rowId, colId).isBomb = true;
-        });
-
-        this.mines.forEach((mine) => {
-            const neighborBombCount = this.#getNeighborMines(mine).filter(
-                (m) => m.isBomb
-            ).length;
-            mine.neighborCount = neighborBombCount;
-        });
-    }
-    #setEvents() {
-        this.mines.forEach((mine) => {
-            mine.on('bombed', (thisMine, ...args) => {
-                this.emit('bombed', thisMine, ...args);
+    public touch(mine: Mine): void {
+        mine.neighborPositions
+            .map((position) => this.mine(position))
+            .filter((neighborMine) => neighborMine !== mine)
+            .forEach((neighborMine) => {
+                neighborMine.touch();
             });
-            mine.on('opened', (thisMine, ...args) => {
-                this.emit('opened', thisMine, ...args);
-            });
+    }
+
+    #initialize(): void {
+        // 盤面をリセットする
+        this.mines.forEach((mine) => {
+            mine.reset();
+        });
+
+        // Bombを設定する
+        safeGetBomPositions(this.#options).forEach((position) => {
+            this.mine(position).isBomb = true;
+        });
+
+        // 近隣のBombの個数を調整する
+        this.mines.forEach((mine) => {
+            mine.neighborCount = mine.neighborPositions
+                .map((position) => this.mine(position))
+                .filter((mine) => mine.isBomb).length;
         });
     }
+
+    #registerEvents() {
+        this.on('resolved', (mine) => this.resolve(mine as Mine));
+        this.on('bombed', (mine) => this.fail(mine as Mine));
+        this.on('opened', (mine) => this.touch(mine as Mine));
+    }
+
+    protected override onRightClick(): void {}
+    protected override onLeftClick(): void {}
 }

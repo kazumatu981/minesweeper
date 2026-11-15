@@ -12,8 +12,13 @@ function onPageLoad() {
 
     const field = new MineField({
         size: 10,
-        mineCount: 10,
+        bombCount: 15,
     });
 
+    field.on('ended', () => console.log('ended'));
+    field.on('failed', () => console.log('failed'));
+    field.on('score-changed', () =>
+        console.log(`score: ${JSON.stringify(field.score)}`)
+    );
     testPanel?.appendChild(field.element);
 }

@@ -1,6 +1,6 @@
 import { AssertionError } from 'node:assert';
 export class AssertHtmlElement {
-    static equalClassNames(
+    public static equalClassNames(
         element: HTMLElement,
         expectedClassNames: string[]
     ): void {
@@ -22,7 +22,10 @@ export class AssertHtmlElement {
             }
         }
     }
-    static equalTextContent(element: HTMLElement, expectedText: string): void {
+    public static equalTextContent(
+        element: HTMLElement,
+        expectedText: string
+    ): void {
         const actualText = element.textContent ?? '';
         if (actualText !== expectedText) {
             throw new AssertionError({

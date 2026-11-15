@@ -31,11 +31,11 @@ function onPageLoad() {
     [mine0_0, mine0_1, mine0_2].forEach((mine) => {
         mine.on('state-change', (thisMine) => {
             console.log(
-                `mine state changed: id=${thisMine.id}, state=${thisMine.state}`
+                `mine state changed: id=${(thisMine as Mine).id}, state=${(thisMine as Mine).state}`
             );
         });
         mine.on('bombed', (thisMine) => {
-            console.log(`mine boom: id=${thisMine.id}`);
+            console.log(`mine boom: id=${(thisMine as Mine).id}`);
         });
     });
 

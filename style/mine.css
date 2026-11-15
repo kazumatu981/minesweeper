@@ -63,19 +63,19 @@
 .___mine_state_opened {
   background-color: var(--grey-level-1);
 }
+.___mine_state_touched {
+  background-color: var(--grey-level-1);
+}
 .___mine_state_closed {
   background-color: var(--grey-level-7);
 }
-.___mine_state_touched {
-  background-color: var(--grey-level-2);
-}
 .___mine_state_mustBe {
-  color: var(--red);
-  background-color: var(--grey-level-2);
+  color: var(--grey-level-3);
+  background-color: var(--navy);
 }
 .___mine_state_mayBe {
-  color: var(--green);
-  background-color: var(--grey-level-2);
+  color: var(--grey-level-3);
+  background-color: var(--green);
 }
 .___mine_state_bomb {
   color: var(--grey-level-3);

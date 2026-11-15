@@ -1,5 +1,12 @@
+/**
+ * アサーションエラー
+ */
 export class AssertionError extends Error {
-    constructor(message: string) {
+    /**
+     * アサーションエラーのコンストラクタ
+     * @param message メッセージ
+     */
+    public constructor(message: string) {
         super(message);
         this.name = AssertionError.name;
     }
@@ -7,7 +14,6 @@ export class AssertionError extends Error {
 
 /**
  * 値が指定された範囲内にあることを確認する
- * @private
  * @param value 値
  * @param minimum 最小値
  * @param maximum 最大値
@@ -37,9 +43,26 @@ export function __assertSomeOf<T>(value: T, array: T[]): void {
     }
 }
 /**
+ * 変数が定義されているか
+ * @param value 対象変数
+ */
+export function __assertIsDefined<T>(value: T) {
+    if (value === undefined) {
+        throw new AssertionError('The value must be defined.');
+    }
+}
+/**
+ * 対象がundefinedか
+ * @param value 対象変数
+ */
+export function __assertIsUndefined<T>(value: T) {
+    if (value !== undefined) {
+        throw new AssertionError('The value must be undefined.');
+    }
+}
+/**
  * IDからDOMエレメントを安全に取得する
  * 見つからなかった場合は、例外を発生させる
- * @private
  * @param id エレメントID
  * @returns エレメント
  */

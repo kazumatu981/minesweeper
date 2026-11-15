@@ -1,120 +1,275 @@
-import { __assertBetween, EventHandler } from '../common/index.js';
-
 import {
-    type MineState,
-    type MineEvent,
-    MINE_BASE_CLASS,
-    MINE_STATE_CLASSES,
-    MINE_BOMB_CLASS,
-    MINE_NEIGHBOR_CLASSES,
-    formatMineId,
-} from './utils/index.js';
+    type DecisionTable,
+    type DecisionTableDictionary,
+    type StateActionHandlers,
+    type StateMachineContext,
+    type StateMachineEvents,
+    __assertBetween,
+    StateMachine,
+    UiComponentBase,
+    formatClass,
+    formatId,
+    createRandomString,
+} from '../common/index.js';
 
-//#region ローカル型やローカル定数
+import { type MinePosition, getNeighborPositions } from './mine-position.js';
+
+//#region 状態、イベント、アクションの定義
 /**
- * UIイベント定義
+ * Mineの状態定義
  */
-type UiEvent =
+export type MineState =
+    | 'closed'
+    | 'mustBe'
+    | 'mayBe'
+    | 'opened'
+    | 'touched'
+    | 'bomb';
+
+/**
+ * Mineのイベント定義
+ */
+export type MineEvent = StateMachineEvents | 'bombed' | 'opened' | 'resolved';
+
+/**
+ * Mineのアクション定義
+ */
+type MineAction =
     /** タッチした */
     | 'touch'
     /** 右クリックした */
     | 'rClick'
     /**クリックした */
-    | 'click';
+    | 'click'
+    /** 初期状態に戻す */
+    | 'reset';
+// #endregion
 
-//#region 状態やUIイベントをもとにした決定表
-//#region table types
+//#region 識別子, クラス
+const MINE_PREFIX = '___mine';
+
+//#region 識別子
+const ID_CHARACTERS =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 /**
- * Mineに関する述語関数
+ * Mineの識別子を生成する。
+ *
+ * @param rowId 行番号
+ * @param colId 列番号
+ * @returns 行番号と列番号を含むMineの識別子
  */
-type MinePredicate<T> = (mine: Mine) => T;
-/**
- * Mineの状態に応じた述語関数決定テーブル
- */
-type StateDecisionTable<T> = Record<MineState, MinePredicate<T>>;
-/**
- * UIイベントとMineに応じた述語決定テーブル
- */
-type UiEventStateDecisionTable<T> = Record<UiEvent, StateDecisionTable<T>>;
-//#endregion
-//#region table bodies
-/**
- * クラスの決定
- */
-const selectClasses: StateDecisionTable<string[]> = {
-    closed: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.closed],
-    touched: (mine) => [
-        MINE_BASE_CLASS,
-        MINE_STATE_CLASSES.touched,
-        MINE_NEIGHBOR_CLASSES[mine.neighborCount]!,
-    ],
-    mayBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mayBe],
-    mustBe: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.mustBe],
-    opened: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.opened],
-    bomb: (_) => [MINE_BASE_CLASS, MINE_STATE_CLASSES.bomb, MINE_BOMB_CLASS],
-};
-/**
- * Mineのテキストの決定
- */
-const selectText: StateDecisionTable<string> = {
-    closed: (_) => ' ',
-    touched: (mine) => mine.neighborCount.toString(),
-    mayBe: (_) => '?',
-    mustBe: (_) => 'F',
-    opened: (_) => ' ',
-    bomb: (_) => 'B',
-};
-/**
- * 次の状態の決定
- */
-const selectNextState: UiEventStateDecisionTable<MineState> = {
-    touch: {
-        closed: (_) => 'touched',
-        touched: (_) => 'touched',
-        mayBe: (_) => 'mayBe',
-        mustBe: (_) => 'mustBe',
-        opened: (_) => 'opened',
-        bomb: (_) => 'bomb',
-    },
-    rClick: {
-        closed: (_) => 'mustBe',
-        touched: (_) => 'mustBe',
-        mayBe: (mine) => (mine.isTouched ? 'touched' : 'closed'),
-        mustBe: (_) => 'mayBe',
-        opened: (_) => 'opened',
-        bomb: (_) => 'bomb',
-    },
-    click: {
-        closed: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
-        touched: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
-        mayBe: (mine) => (mine.isBomb ? 'bomb' : 'opened'),
-        mustBe: (_) => 'mustBe',
-        opened: (_) => 'opened',
-        bomb: (_) => 'bomb',
-    },
-};
-//#endregion
-//#endregion
+function formatMineId(position: MinePosition): string {
+    return formatId(
+        MINE_PREFIX,
+        createRandomString(8, ID_CHARACTERS),
+        position.rowId,
+        position.colId
+    );
+}
 //#endregion
 
-export class Mine extends EventHandler<MineEvent> {
-    readonly #element: HTMLElement;
-    readonly #rowId;
-    readonly #colId;
-    #state: MineState = 'closed';
+//#region クラス
+/**
+ * Mineの表示に使用するCSSクラス名を生成する。
+ */
+class MineClasses {
+    /** 基本のCSSクラス名 */
+    public static readonly base = formatClass(MINE_PREFIX, 'base');
+    /** 爆弾のCSSクラス名 */
+    public static readonly bomb = formatClass(MINE_PREFIX, 'bomb');
+
+    /**
+     * 近隣の爆弾数に対応するCSSクラス名を生成する。
+     *
+     * @param neighborCount 近隣の爆弾数
+     * @returns CSSクラス名
+     */
+    public static neighbor(neighborCount: number): string {
+        return formatClass(MINE_PREFIX, undefined, 'neighbor', neighborCount);
+    }
+
+    /**
+     * Mineの状態に対応するCSSクラス名を生成する。
+     *
+     * @param state Mineの状態
+     * @returns CSSクラス名
+     */
+    public static state(state: MineState): string {
+        return formatClass(MINE_PREFIX, undefined, 'state', state);
+    }
+}
+//#endregion
+
+//#region 決定テーブルの型定義
+/**
+ * Mineの状態に応じたクラスとテキストを決定するための決定テーブル
+ */
+type MineDecisionTable = {
+    /**
+     * クラスの決定テーブル
+     */
+    classes: DecisionTable<MineState, string[], Mine>;
+    /**
+     * テキストの決定テーブル
+     */
+    text: DecisionTable<MineState, string, Mine>;
+};
+//#endregion
+
+//#region 状態遷移テーブル、状態アクションハンドラ (StateMachineContextの実装として使用する)
+/**
+ * 状態遷移テーブル
+ */
+type MineTransitionTable = DecisionTableDictionary<MineAction, MineState, Mine>;
+/**
+ * 状態に応じた述語関数決定テーブル
+ */
+type MineStateActionHandlers = StateActionHandlers<MineState>;
+//#endregion
+
+/**
+ * マインスイーパーの1マスを表し、状態と表示を管理する。
+ */
+export class Mine
+    extends UiComponentBase<MineEvent>
+    implements StateMachineContext<MineState, MineAction, Mine>
+{
+    //#region プロパティの内部ストア
+    /** 場所 */
+    readonly #position;
+    /** 盤面のサイズ */
+    readonly #size;
+    /** 近隣の爆弾数 */
     #neighborBombCount = 0;
+    /** 爆弾かどうか */
     #isBomb = false;
-    #isTouched = false;
+    //#endregion
 
-    public constructor(rowId: number, colId: number) {
+    //#region ステートマシン関連のプロパティ
+    /**
+     * Mineの状態遷移を管理するStateMachine
+     */
+    readonly #sateMachine: StateMachine<MineState, MineAction, Mine>;
+
+    /**
+     * 状態に応じたクラスとテキストを決定するための決定テーブル
+     */
+    readonly #decisionTable: MineDecisionTable = {
+        classes: {
+            closed: (_) => [MineClasses.base, MineClasses.state('closed')],
+            mayBe: (_) => [MineClasses.base, MineClasses.state('mayBe')],
+            mustBe: (_) => [MineClasses.base, MineClasses.state('mustBe')],
+            opened: (mine) => [
+                MineClasses.base,
+                MineClasses.state('opened'),
+                MineClasses.neighbor(mine.#neighborBombCount),
+            ],
+            touched: (mine) => [
+                MineClasses.base,
+                MineClasses.state('touched'),
+                MineClasses.neighbor(mine.#neighborBombCount),
+            ],
+            bomb: (_) => [MineClasses.base, MineClasses.state('bomb')],
+        },
+        text: {
+            closed: (_) => ' ',
+            mayBe: (_) => '?',
+            mustBe: (_) => 'F',
+            opened: (mine) =>
+                mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+            touched: (mine) =>
+                mine.neighborCount === 0 ? ' ' : mine.neighborCount.toString(),
+            bomb: (_) => 'B',
+        },
+    };
+
+    /**
+     * 状態遷移テーブル
+     * StateMachineContextの実装として使用する
+     */
+    public readonly transitionTable: MineTransitionTable = {
+        touch: {
+            closed: (mine: Mine) => (mine.isBomb ? 'closed' : 'touched'),
+            mayBe: (_) => 'mayBe',
+            mustBe: (_) => 'mustBe',
+            opened: (_) => 'opened',
+            bomb: (_) => 'bomb',
+            touched: (_) => 'touched',
+        },
+        rClick: {
+            closed: (_) => 'mustBe',
+            mustBe: (_) => 'mayBe',
+            mayBe: (_) => 'closed',
+            opened: (_) => 'opened',
+            bomb: (_) => 'bomb',
+            touched: (_) => 'touched',
+        },
+        click: {
+            closed: (mine: Mine) => (mine.isBomb ? 'bomb' : 'opened'),
+            mayBe: (mine: Mine) => (mine.isBomb ? 'bomb' : 'opened'),
+            mustBe: (_) => 'mustBe',
+            opened: (_) => 'opened',
+            bomb: (_) => 'bomb',
+            touched: (_) => 'touched',
+        },
+        reset: {
+            closed: (_) => 'closed',
+            mayBe: (_) => 'closed',
+            mustBe: (_) => 'closed',
+            opened: (_) => 'closed',
+            bomb: (_) => 'closed',
+            touched: (_) => 'closed',
+        },
+    };
+    /**
+     * 状態に応じた述語関数決定テーブル
+     * StateMachineContextの実装として使用する
+     */
+    public readonly stateActionHandlers: MineStateActionHandlers = [
+        {
+            state: undefined,
+            action: (mine) => (mine as Mine).#adjustFace(),
+        },
+        {
+            state: undefined,
+            action: (mine) => (mine as Mine).emit('state-change', mine),
+        },
+        {
+            // 爆弾通知
+            state: 'bomb',
+            action: (mine) => (mine as Mine).emit('bombed', mine),
+        },
+        {
+            // 開封通知
+            state: ['opened', 'touched', 'mustBe'],
+            action: (mine) => (mine as Mine).emit('resolved', mine),
+        },
+        {
+            // 開封通知
+            state: ['opened'],
+            action: (mine) => (mine as Mine).emit('opened', mine),
+        },
+    ];
+    //#endregion
+
+    /**
+     * Mineを生成する。
+     *
+     * @param rowId 行番号
+     * @param colId 列番号
+     */
+    public constructor(position: MinePosition, size: number) {
         // 親クラスのコンストラクタ
-        super();
-        this.#rowId = rowId;
-        this.#colId = colId;
-
-        this.#element = document.createElement('div');
-        this.#element.id = this.id;
-        this.#registerEvent();
+        super({
+            id: formatMineId(position),
+            classes: [],
+        });
+        this.#sateMachine = new StateMachine<MineState, MineAction, Mine>(
+            'closed',
+            this
+        );
+        this.#position = position;
+        this.#size = size;
 
         // 表面を調整する
         this.#adjustFace();
@@ -122,60 +277,65 @@ export class Mine extends EventHandler<MineEvent> {
 
     //#region Properties
 
+    /**
+     * 行番号を取得する。
+     *
+     * @returns 行番号
+     */
     public get rowId(): number {
-        return this.#rowId;
-    }
-    public get colId(): number {
-        return this.#colId;
-    }
-
-    public get state(): MineState {
-        return this.#state;
-    }
-    protected set state(value: MineState) {
-        // 以前の値と異なる場合のみ値をセットする
-        if (this.#state !== value) {
-            this.#state = value;
-            this.emit('state-change');
-        }
+        return this.#position.rowId;
     }
 
     /**
-     * 爆弾かどうかを取得する
+     * 列番号を取得する。
+     *
+     * @returns 列番号
+     */
+    public get colId(): number {
+        return this.#position.colId;
+    }
+
+    /**
+     * 現在の状態を取得する。
+     *
+     * @returns Mineの状態
+     */
+    public get state(): MineState {
+        return this.#sateMachine.state;
+    }
+
+    /**
+     * 爆弾かどうかを取得する。
+     *
+     * @returns 爆弾の場合は`true`
      */
     public get isBomb(): boolean {
         return this.#isBomb;
     }
+
     /**
-     * 爆弾かどうかを設定する
+     * 爆弾かどうかを設定する。
+     *
+     * @param value 爆弾の場合は`true`
      */
     public set isBomb(value: boolean) {
         this.#isBomb = value;
     }
 
     /**
-     * チェックされたかどうかを取得する
-     */
-    public get isTouched(): boolean {
-        return this.#isTouched;
-    }
-    /**
-     * チェックされたかどうかを設定する
-     */
-    protected set isTouched(value: boolean) {
-        if (this.#isTouched !== value) {
-            this.#isTouched = value;
-        }
-    }
-
-    /**
-     * 近隣の爆弾の数を参照する
+     * 近隣の爆弾の数を取得する。
+     *
+     * @returns 近隣の爆弾数
      */
     public get neighborCount(): number {
         return this.#neighborBombCount;
     }
+
     /**
-     * 近隣の爆弾の数を設定する
+     * 近隣の爆弾数を設定する。
+     *
+     * @param value 近隣の爆弾数（0から9まで）
+     * @throws 値が0から9の範囲外の場合
      */
     public set neighborCount(value: number) {
         // 数値で範囲に収まっているか
@@ -184,105 +344,60 @@ export class Mine extends EventHandler<MineEvent> {
         this.#neighborBombCount = value;
     }
 
-    /**
-     * CSSクラスを参照する
-     */
-    get classes(): string[] {
-        return selectClasses[this.state](this);
-    }
-
-    /**
-     * 表面テキストを参照する
-     */
-    get text(): string {
-        return selectText[this.state](this);
-    }
-
-    /**
-     * idを参照する
-     */
-    get id(): string {
-        return formatMineId(this.#rowId, this.#colId);
-    }
-
-    /**
-     * DOM要素の参照
-     */
-    get element(): HTMLElement {
-        return this.#element;
-    }
-
-    set __unsafeState(value: MineState) {
-        this.state = value;
-    }
     //#endregion
 
-    //#endregion
-
-    touch() {
-        this.isTouched = true;
-        this.state = selectNextState['touch'][this.state](this);
-    }
-
-    //#region Very Private Zone !!!!!! these methods are encapsulated
     /**
-     * イベント登録
+     * Mineを初期状態に戻す。
      */
-    #registerEvent() {
-        // 右クリックの登録
-        this.#element.addEventListener('click', () => {
-            this.#onLeftClick();
-        });
-        // 左クリックの登録
-        this.#element.addEventListener('contextmenu', (domElement) => {
-            domElement.preventDefault();
-            this.#onRightClick();
-        });
-
-        // スタイル変更イベントの登録
-        this.on('state-change', (thisObject: Mine) => {
-            thisObject.#adjustFace();
-        });
-
-        // 爆弾通知
-        this.on(
-            'state-change',
-            (thisObject: Mine) => thisObject.emit('bombed'),
-            (thisObject: Mine) => thisObject.state === 'bomb'
-        );
-
-        // 開封通知
-        this.on(
-            'state-change',
-            (thisObject: Mine) => thisObject.emit('opened'),
-            (thisObject: Mine) => thisObject.state === 'opened'
-        );
+    public reset() {
+        this.isBomb = false;
+        this.neighborCount = 0;
+        this.#sateMachine.applyAction('reset');
     }
 
+    /**
+     * Mineにタッチしたときの状態遷移を適用する。
+     * ここで、タッチとは、Openしたときの周辺Mineの挙動を表す。
+     */
+    public touch() {
+        this.#sateMachine.applyAction('touch');
+    }
+
+    /**
+     * 近くのMineの位置を取得する
+     * @returns 近くのMineの位置
+     */
+    public get neighborPositions(): MinePosition[] {
+        return getNeighborPositions(this.#position, this.#size);
+    }
+
+    //#region イベントハンドラ
     /**
      * 左クリックのイベントハンドラ
+     * UiComponentBaseの抽象メソッドの実装
      */
-    #onLeftClick() {
-        this.state = selectNextState['click'][this.state](this);
+    protected override onLeftClick() {
+        this.#sateMachine.applyAction('click');
     }
     /**
      * 右クリックのイベントハンドラ
+     * UiComponentBaseの抽象メソッドの実装
      */
-    #onRightClick() {
-        this.state = selectNextState['rClick'][this.state](this);
+    protected override onRightClick() {
+        this.#sateMachine.applyAction('rClick');
     }
+    //#endregion
 
+    //#region private methods
     /**
      * テキストとスタイルの調整
      */
     #adjustFace() {
-        // 表面テキストとクラスをクリア
-        this.element.textContent = ' ';
-        this.element.classList.remove(...this.element.classList);
-
         // テキストを設定
-        this.element.textContent = this.text;
-        this.element.classList.add(...this.classes);
+        this.text = this.#decisionTable.text[this.#sateMachine.state](this);
+        // クラスを設定
+        this.classes =
+            this.#decisionTable.classes[this.#sateMachine.state](this);
     }
     //#endregion
 }
