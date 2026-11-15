@@ -95,7 +95,7 @@ class TestGrandparent extends UiComponentWithChildrenBase<
     protected override onLeftClick(): void {}
 }
 
-void describe('UiComponentWithChildrenBase', () => {
+void describe('子コンポーネントを持つ UI 基底クラス', () => {
     before(() => {
         mockDocument();
     });
@@ -104,7 +104,7 @@ void describe('UiComponentWithChildrenBase', () => {
         restoreDocument();
     });
 
-    void it('generates the configured number of children and appends them in order', () => {
+    void it('設定された数の子コンポーネントを生成し、順番に追加する', () => {
         const generateChildMock = mock.fn(
             (index: number) => new TestChild(index)
         );
@@ -130,7 +130,7 @@ void describe('UiComponentWithChildrenBase', () => {
         );
     });
 
-    void it('retains the children array reference and updates it when reset', () => {
+    void it('reset 後も子配列の参照を保ち、要素を更新する', () => {
         const component = new TestParent({
             id: 'test-parent',
             classes: [],
@@ -152,7 +152,7 @@ void describe('UiComponentWithChildrenBase', () => {
         );
     });
 
-    void it('clears the children and DOM when reset to zero', () => {
+    void it('子の数を 0 に reset すると、子コンポーネントと DOM を空にする', () => {
         const component = new TestParent({
             id: 'test-parent',
             classes: [],
@@ -166,7 +166,7 @@ void describe('UiComponentWithChildrenBase', () => {
         assert.equal(component.element.childElementCount, 0);
     });
 
-    void it('forwards all arguments of mapped child events to the parent', () => {
+    void it('対応付けられた子イベントの引数をすべて親へ伝える', () => {
         const component = new TestParent({
             id: 'test-parent',
             classes: [],
@@ -189,7 +189,7 @@ void describe('UiComponentWithChildrenBase', () => {
         ]);
     });
 
-    void it('forwards child event arguments through two parent levels', () => {
+    void it('子イベントの引数を親子 2 段階で伝える', () => {
         const grandparent = new TestGrandparent();
         const grandchild = grandparent.children[0]!.children[0]!;
         const eventMock = mock.fn();

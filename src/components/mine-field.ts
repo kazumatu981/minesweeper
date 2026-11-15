@@ -70,7 +70,7 @@ export interface MineFieldOptions extends MinesOption {
     size: number;
 }
 
-function __assertBombOptions(mineFieldOptions: MineFieldOptions) {
+function __assertMineFieldOptions(mineFieldOptions: MineFieldOptions) {
     __assertBetween(mineFieldOptions.size, 0, SIZE_MAX);
     if (mineFieldOptions.bombs !== undefined) {
         __assertIsUndefined(mineFieldOptions.bombCount);
@@ -109,31 +109,52 @@ type StateMachineTransitionTable = DecisionTableDictionary<
 type MineFieldStateActionHandlers = StateActionHandlers<MineFieldState>;
 //#endregion
 
+//#region イベントマップ
 const eventMap = new Map<MineEvent, MineFieldEvent>([
     ['bombed', 'bombed'],
     ['resolved', 'resolved'],
     ['opened', 'opened'],
     ['state-change', 'state-change'],
 ]);
+//#endregion
 
+//#region スコア定義
 export interface MineScore {
+    /** 盤面のマス数 */
     total: number;
+    /** 爆弾だと確定しているマス数 */
     flagged: number;
+    /** 開封済み、または周辺の開封によりタッチされたマス数 */
     estimated: number;
+    /** 未確定のマス数 */
     remained: number;
 }
+//#endregion
 
+/**
+ * マインスイーパーの盤面全体と、盤面の状態・スコアを管理する。
+ */
 export class MineField
     extends UiComponentWithChildrenBase<MineFieldEvent, MineEvent, MineRow>
     implements StateMachineContext<MineFieldState, MineFieldAction, MineField>
 {
-    #options: MineFieldOptions;
+    //#region プロパティの内部ストア
+    /** 盤面のサイズと爆弾配置の設定 */
+    #options: { current: MineFieldOptions };
+    //#endregion
+
+    //#region ステートマシン関連のプロパティ
+    /** 盤面の状態遷移を管理するStateMachine */
     readonly #stateMachine: StateMachine<
         MineFieldState,
         MineFieldAction,
         MineField
     >;
 
+    /**
+     * 盤面の状態遷移テーブル。
+     * StateMachineContextの実装として使用する。
+     */
     public readonly transitionTable: StateMachineTransitionTable = {
         resolve: {
             initialized: (field) => (field.isEnded ? 'ended' : 'started'),
@@ -155,6 +176,10 @@ export class MineField
         },
     };
 
+    /**
+     * 状態に応じてイベントを発行するハンドラ。
+     * StateMachineContextの実装として使用する。
+     */
     public readonly stateActionHandlers: MineFieldStateActionHandlers = [
         {
             state: 'ended',
@@ -165,8 +190,19 @@ export class MineField
             action: (field) => (field as MineField).emit('failed', field),
         },
     ];
+    //#endregion
 
+    //#region コンストラクタ
+    /**
+     * MineFieldを生成する。
+     *
+     * @param options 盤面サイズと爆弾配置の設定
+     * @throws 盤面サイズまたは爆弾配置が有効な範囲外の場合
+     */
     public constructor(options: MineFieldOptions) {
+        __assertMineFieldOptions(options);
+        const optionsReference = { current: options };
+
         super({
             id: formatMineFieldId(),
             classes: [MINE_FIELD_BASE_CLASS],
@@ -174,9 +210,12 @@ export class MineField
             generateChild: (rowId) =>
                 new MineRow({
                     rowId,
-                    size: options.size,
+                    size: optionsReference.current.size,
                     mineGenerator: (rowId, colId) =>
-                        new Mine({ rowId, colId }, options.size),
+                        new Mine(
+                            { rowId, colId },
+                            optionsReference.current.size
+                        ),
                 }),
             eventMap,
         });
@@ -187,25 +226,47 @@ export class MineField
             MineField
         >('initialized', this);
 
-        this.#options = options;
+        this.#options = optionsReference;
 
         this.#registerEvents();
 
         this.reset();
     }
+    //#endregion
 
+    //#region プロパティ
+    /**
+     * 盤面の1辺のマス数を取得する。
+     *
+     * @returns 盤面の1辺のマス数
+     */
     public get size(): number {
-        return this.#options.size;
+        return this.#options.current.size;
     }
 
+    /**
+     * 盤面を構成する行を取得する。
+     *
+     * @returns 盤面の行
+     */
     public get rows(): readonly MineRow[] {
         return this.children;
     }
 
+    /**
+     * 盤面上のすべてのマスを取得する。
+     *
+     * @returns 盤面上のMine
+     */
     public get mines(): Mine[] {
         return this.children.flatMap((row) => row.children);
     }
 
+    /**
+     * 現在の盤面スコアを取得する。
+     *
+     * @returns マス数、確定数、推定数、未確定数
+     */
     public get score(): MineScore {
         return {
             total: this.totalCount,
@@ -216,44 +277,84 @@ export class MineField
         };
     }
 
+    /** すべてのマスが確定または開封されたかを返す。 */
     private get isEnded(): boolean {
         const score = this.score;
         return score.estimated + score.flagged === score.total;
     }
 
+    /** 盤面の総マス数を取得する。 */
     private get totalCount(): number {
         return this.size * this.size;
     }
+
+    /** 爆弾だと確定しているマスを取得する。 */
     private get flagged(): Mine[] {
         return this.mines.filter((mine) => mine.state === 'mustBe');
     }
+
+    /** 開封済み、または周辺の開封によりタッチされたマスを取得する。 */
     private get estimated(): Mine[] {
         return this.mines.filter(
             (mine) => mine.state === 'opened' || mine.state === 'touched'
         );
     }
+    //#endregion
 
+    //#region 公開メソッド
+    /**
+     * 指定した位置のMineを取得する。
+     *
+     * @param position 取得するマスの位置
+     * @returns 指定位置のMine
+     */
     public mine(position: MinePosition): Mine {
         return this.children[position.rowId]!.children[position.colId]!;
     }
+
+    /**
+     * 盤面を初期状態に戻す。
+     *
+     * @param options 指定した場合に適用する新しい盤面設定
+     */
     public reset(options?: MineFieldOptions): void {
         if (options) {
-            this.#options = options;
-            this.resetChildren(this.#options.size);
+            this.#options.current = options;
+            this.resetChildren(this.#options.current.size);
         }
         this.#initialize();
         // 爆弾をセットする
         this.#stateMachine.applyAction('reset');
     }
-    public fail(_mine: Mine): void {
+    //#endregion
+
+    //#region イベントハンドラ
+    /**
+     * 爆弾を開けたときの失敗処理を行う。
+     *
+     * @param _mine 爆弾を開けたMine
+     */
+    protected fail(_mine: Mine): void {
         this.#stateMachine.applyAction('fail');
         this.emit('score-changed', this);
     }
-    public resolve(_mine: Mine): void {
+
+    /**
+     * マスの解決に応じて状態とスコアを更新する。
+     *
+     * @param _mine 解決されたMine
+     */
+    protected resolve(_mine: Mine): void {
         this.#stateMachine.applyAction('resolve');
         this.emit('score-changed', this);
     }
-    public touch(mine: Mine): void {
+
+    /**
+     * 開封したマスの周辺にあるマスをタッチする。
+     *
+     * @param mine 開封したMine
+     */
+    protected touch(mine: Mine): void {
         mine.neighborPositions
             .map((position) => this.mine(position))
             .filter((neighborMine) => neighborMine !== mine)
@@ -262,6 +363,15 @@ export class MineField
             });
     }
 
+    /** 右クリック処理。盤面自体では何も行わない。 */
+    protected override onRightClick(): void {}
+
+    /** 左クリック処理。盤面自体では何も行わない。 */
+    protected override onLeftClick(): void {}
+    //#endregion
+
+    //#region private methods
+    /** すべてのマスを初期化し、爆弾と近隣の爆弾数を設定する。 */
     #initialize(): void {
         // 盤面をリセットする
         this.mines.forEach((mine) => {
@@ -269,7 +379,7 @@ export class MineField
         });
 
         // Bombを設定する
-        safeGetBomPositions(this.#options).forEach((position) => {
+        safeGetBomPositions(this.#options.current).forEach((position) => {
             this.mine(position).isBomb = true;
         });
 
@@ -281,12 +391,11 @@ export class MineField
         });
     }
 
+    /** Mineからのイベントを盤面の処理に接続する。 */
     #registerEvents() {
         this.on('resolved', (mine) => this.resolve(mine as Mine));
         this.on('bombed', (mine) => this.fail(mine as Mine));
         this.on('opened', (mine) => this.touch(mine as Mine));
     }
-
-    protected override onRightClick(): void {}
-    protected override onLeftClick(): void {}
+    //#endregion
 }

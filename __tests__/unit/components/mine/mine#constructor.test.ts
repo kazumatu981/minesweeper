@@ -4,9 +4,9 @@ import { Mine } from '../../../../src/components/mine.js';
 import { mockDocument, restoreDocument } from '../../util/document_mock.js';
 
 /**
- * コンストラクタのテスト
+ * Mine の生成時に初期値と DOM 要素を検証する。
  */
-void describe('Mine: constructor', () => {
+void describe('Mine のコンストラクター', () => {
     beforeEach(() => {
         mockDocument();
     });
@@ -16,49 +16,49 @@ void describe('Mine: constructor', () => {
     });
 
     /**
-     * 各プロパティの初期値確認
+     * 各プロパティの初期値を検証する。
      */
-    void describe('initial values', () => {
-        void it('rowId/colId: number which is set in constructor', () => {
+    void describe('初期値', () => {
+        void it('コンストラクターで指定した rowId と colId を保持する', () => {
             const mine = new Mine({ rowId: 2, colId: 3 }, 5);
 
             assert.equal(mine.rowId, 2);
             assert.equal(mine.colId, 3);
         });
-        void it('state: closed', () => {
+        void it('state を closed で初期化する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
 
             assert.equal(mine.state, 'closed');
         });
-        void it('isBomb: false', () => {
+        void it('isBomb を false で初期化する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
 
             assert.equal(mine.isBomb, false);
         });
-        void it('neighborCount: 0', () => {
+        void it('neighborCount を 0 で初期化する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
             assert.equal(mine.neighborCount, 0);
         });
-        void it('element: not undefined', () => {
+        void it('element を生成する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
             assert.notEqual(mine.element, undefined);
         });
-        void it('id: ___mine-<rowId>-<colId>-<random>', () => {
+        void it('rowId、colId、ランダム文字列を含む ID を生成する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
             assert.match(mine.id, /^___mine-1-2-[A-Za-z0-9]{8}$/);
         });
     });
 
     /**
-     * DOMエレメントの状態
+     * 生成した DOM 要素のタグ名と ID を検証する。
      */
-    void describe('DOM element', () => {
-        void it('should be create DIV element', () => {
+    void describe('DOM 要素', () => {
+        void it('DIV 要素を生成する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
 
             assert.equal(mine.element.tagName.toLowerCase(), 'div');
         });
-        void it('elements id must be expected', () => {
+        void it('要素に座標とランダム文字列を含む ID を設定する', () => {
             const mine = new Mine({ rowId: 1, colId: 2 }, 3);
             assert.match(mine.element.id, /^___mine-1-2-[A-Za-z0-9]{8}$/);
         });

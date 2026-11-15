@@ -1,4 +1,4 @@
-import { describe, suite, test, beforeEach, afterEach } from 'node:test';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 
@@ -9,8 +9,8 @@ import {
     __safeGetElementById,
 } from '../../../src/common/assert.js';
 
-void suite('unittest: __assertBetween', () => {
-    void test('assert when small value.', () => {
+void describe('__assertBetween による範囲検証', () => {
+    void it('下限を大きく下回る値の場合は AssertionError を投げる', () => {
         const test = -100;
         const minimum = 0;
         const maximum = 100;
@@ -19,7 +19,7 @@ void suite('unittest: __assertBetween', () => {
             __assertBetween(test, minimum, maximum);
         }, AssertionError);
     });
-    void test('assert when when under minimum boundary.', () => {
+    void it('下限を下回る値の場合は AssertionError を投げる', () => {
         const test = -1;
         const minimum = 0;
         const maximum = 100;
@@ -28,28 +28,28 @@ void suite('unittest: __assertBetween', () => {
             __assertBetween(test, minimum, maximum);
         }, AssertionError);
     });
-    void test('not assert when minimum boundary.', () => {
+    void it('下限値の場合は例外を投げない', () => {
         const test = 0;
         const minimum = 0;
         const maximum = 100;
 
         __assertBetween(test, minimum, maximum);
     });
-    void test('not assert when inner boundary.', () => {
+    void it('範囲内の値の場合は例外を投げない', () => {
         const test = 50;
         const minimum = 0;
         const maximum = 100;
 
         __assertBetween(test, minimum, maximum);
     });
-    void test('not assert when maximum boundary.', () => {
+    void it('上限値の場合は例外を投げない', () => {
         const test = 100;
         const minimum = 0;
         const maximum = 100;
 
         __assertBetween(test, minimum, maximum);
     });
-    void test('assert when when over maximum boundary.', () => {
+    void it('上限を超える値の場合は AssertionError を投げる', () => {
         const test = 101;
         const minimum = 0;
         const maximum = 100;
@@ -58,7 +58,7 @@ void suite('unittest: __assertBetween', () => {
             __assertBetween(test, minimum, maximum);
         }, AssertionError);
     });
-    void test('assert when when large value.', () => {
+    void it('上限を大きく超える値の場合は AssertionError を投げる', () => {
         const test = 300;
         const minimum = 0;
         const maximum = 100;
@@ -69,22 +69,22 @@ void suite('unittest: __assertBetween', () => {
     });
 });
 
-void suite('unittest: __assertSomeOf<T>', () => {
-    void describe('some of number', () => {
-        void test('not assert on included', () => {
+void describe('__assertSomeOf による選択肢の検証', () => {
+    void describe('数値の場合', () => {
+        void it('選択肢に含まれる値では例外を投げない', () => {
             __assertSomeOf(1, [1, 2, 3]);
         });
-        void test('assert on not include', () => {
+        void it('選択肢に含まれない値では AssertionError を投げる', () => {
             assert.throws(() => {
                 __assertSomeOf(0, [1, 2, 3]);
             }, AssertionError);
         });
     });
-    void describe('some of string', () => {
-        void test('not assert on included', () => {
+    void describe('文字列の場合', () => {
+        void it('選択肢に含まれる値では例外を投げない', () => {
             __assertSomeOf('1', ['1', '2', '3']);
         });
-        void test('assert on not include', () => {
+        void it('選択肢に含まれない値では AssertionError を投げる', () => {
             assert.throws(() => {
                 __assertSomeOf('0', ['1', '2', '3']);
             }, AssertionError);
@@ -92,7 +92,7 @@ void suite('unittest: __assertSomeOf<T>', () => {
     });
 });
 
-void suite('unittest: __safeGetElementById', () => {
+void describe('__safeGetElementById による要素取得', () => {
     const defaultDocument = globalThis.document;
     let dom = undefined;
     let mockDocument;
@@ -110,11 +110,11 @@ void suite('unittest: __safeGetElementById', () => {
         globalThis.document = defaultDocument;
     });
 
-    void test('not assert on element founded', () => {
+    void it('指定した ID の要素が存在する場合は例外を投げない', () => {
         __safeGetElementById(theElementId);
     });
 
-    void test('assert on not element founded', () => {
+    void it('指定した ID の要素が存在しない場合は AssertionError を投げる', () => {
         assert.throws(() => {
             __safeGetElementById(`__${theElementId}`);
         }, AssertionError);
