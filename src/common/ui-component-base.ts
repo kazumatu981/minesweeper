@@ -23,6 +23,7 @@ export abstract class UiComponentBase<
     TEvent extends string,
 > extends EventDispatcher<TEvent> {
     #element: HTMLElement;
+    #enabled: boolean = true;
 
     /**
      * コンポーネントの DOM 要素を生成し、マウスイベントを登録します。
@@ -58,21 +59,34 @@ export abstract class UiComponentBase<
     public set text(value: string) {
         this.element.textContent = value;
     }
-
     /** コンポーネントの DOM 要素のテキストです。 */
     public get text(): string {
         return this.element.textContent ?? ' ';
-    }
-
-    /** コンポーネントの DOM 要素に設定されている CSS クラスです。 */
-    public get classes(): string[] {
-        return Array.from(this.element.classList);
     }
 
     /** コンポーネントの DOM 要素に設定する CSS クラスです。 */
     public set classes(value: string[]) {
         this.element.classList.remove(...this.element.classList);
         this.element.classList.add(...value);
+    }
+    /** コンポーネントの DOM 要素に設定されている CSS クラスです。 */
+    public get classes(): string[] {
+        return Array.from(this.element.classList);
+    }
+
+    /**
+     * コンポーネントのクリックイベントの有効性を設定する
+     */
+    public set enabled(value: boolean) {
+        if (this.#enabled !== value) {
+            this.#enabled = value;
+        }
+    }
+    /**
+     * コンポーネントのクリックイベントの有効性を参照する
+     */
+    public get enabled(): boolean {
+        return this.#enabled;
     }
 
     /**
@@ -88,12 +102,16 @@ export abstract class UiComponentBase<
     #registerMouseEvent() {
         // 左クリックの登録
         this.element.addEventListener('click', () => {
-            this.onLeftClick();
+            if (this.enabled) {
+                this.onLeftClick();
+            }
         });
         // 右クリックの登録
         this.element.addEventListener('contextmenu', (domElement) => {
             domElement.preventDefault();
-            this.onRightClick();
+            if (this.enabled) {
+                this.onRightClick();
+            }
         });
     }
 }

@@ -189,6 +189,14 @@ export class MineField
             state: 'failed',
             action: (field) => (field as MineField).emit('failed', field),
         },
+        {
+            state: 'initialized',
+            action: (field) => ((field as MineField).enabled = true),
+        },
+        {
+            state: ['failed', 'ended'],
+            action: (field) => ((field as MineField).enabled = false),
+        },
     ];
     //#endregion
 
