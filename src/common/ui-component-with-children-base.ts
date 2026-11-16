@@ -77,6 +77,9 @@ export abstract class UiComponentWithChildrenBase<
             child.enabled = value;
         });
     }
+    public override get enabled(): boolean {
+        return super.enabled;
+    }
     /**
      * 子コンポーネントを指定した数だけ生成し直します。
      *

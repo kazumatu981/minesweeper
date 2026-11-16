@@ -135,4 +135,34 @@ void describe('UI 基底クラスの振る舞い', () => {
         assert.equal(component.onLeftClickMock.mock.callCount(), 0);
         assert.equal(isNotCanceled, false);
     });
+
+    void it('無効化中はクリック処理を呼び出さず、再有効化後は呼び出す', () => {
+        const component = new TestUiComponent({
+            id: 'test-component',
+            classes: [],
+        });
+
+        assert.equal(component.enabled, true);
+
+        component.enabled = false;
+        mocker.dispatchMouseEvent(component.element, 'click');
+        const event = new mocker.dom.window.MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+        });
+        const isNotCanceled = component.element.dispatchEvent(event);
+
+        assert.equal(component.enabled, false);
+        assert.equal(component.onLeftClickMock.mock.callCount(), 0);
+        assert.equal(component.onRightClickMock.mock.callCount(), 0);
+        assert.equal(isNotCanceled, false);
+
+        component.enabled = true;
+        mocker.dispatchMouseEvent(component.element, 'click');
+        mocker.dispatchMouseEvent(component.element, 'contextmenu');
+
+        assert.equal(component.enabled, true);
+        assert.equal(component.onLeftClickMock.mock.callCount(), 1);
+        assert.equal(component.onRightClickMock.mock.callCount(), 1);
+    });
 });
