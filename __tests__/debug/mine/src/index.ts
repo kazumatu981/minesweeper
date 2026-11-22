@@ -16,9 +16,9 @@ function onPageLoad() {
     }
 
     // テストパネル
-    const mine0_0 = new Mine(0, 0);
-    const mine0_1 = new Mine(0, 1);
-    const mine0_2 = new Mine(0, 2);
+    const mine0_0 = new Mine({ rowId: 0, colId: 0 }, 3);
+    const mine0_1 = new Mine({ rowId: 0, colId: 1 }, 3);
+    const mine0_2 = new Mine({ rowId: 0, colId: 2 }, 3);
     testPanel1.appendChild(mine0_0.element);
     testPanel1.appendChild(mine0_1.element);
     testPanel1.appendChild(mine0_2.element);
@@ -40,7 +40,7 @@ function onPageLoad() {
     });
 
     const _mines1 = Array.from({ length: 10 }).map((_, index) => {
-        const mine = new Mine(1, index);
+        const mine = new Mine({ rowId: 1, colId: index }, 10);
 
         mine.neighborCount = index;
         mine.touch();

@@ -2,12 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build-ui-components",
+            "label": "debug-build",
             "type": "process",
             "command": "npm.cmd",
             "args": [
                 "run",
-                "test:build-ui-components"
+                "debug:build"
             ],
             "group": "build",
             "problemMatcher": []
@@ -22,7 +22,7 @@
                 "Bypass",
                 "-File",
                 "${workspaceFolder}\\.vscode\\start-edge-debug.ps1",
-                "http://127.0.0.1:3000/__tests__/ui-components/mine/mine.html?vscode-livepreview=true"
+                "http://127.0.0.1:3000/__tests__/debug/mine/mine.html?vscode-livepreview=true"
             ],
             "problemMatcher": []
         },
@@ -36,14 +36,14 @@
                 "Bypass",
                 "-File",
                 "${workspaceFolder}\\.vscode\\start-edge-debug.ps1",
-                "http://127.0.0.1:3000/__tests__/ui-components/mine/mine-field.html?vscode-livepreview=true"
+                "http://127.0.0.1:3000/__tests__/debug/mine-field/mine-field.html?vscode-livepreview=true"
             ],
             "problemMatcher": []
         },
         {
             "label": "debug-mine",
             "dependsOn": [
-                "build-ui-components",
+                "debug-build",
                 "open-mine-debug-browser"
             ],
             "dependsOrder": "sequence",
@@ -52,7 +52,7 @@
         {
             "label": "debug-mine-field",
             "dependsOn": [
-                "build-ui-components",
+                "debug-build",
                 "open-mine-field-debug-browser"
             ],
             "dependsOrder": "sequence",
