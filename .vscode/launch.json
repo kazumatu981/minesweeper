@@ -10,7 +10,7 @@
             "type": "msedge",
             "address": "127.0.0.1",
             "port": 9223,
-            "urlFilter": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine.html*",
+            "urlFilter": "http://127.0.0.1:3000/__tests__/debug/mine/mine.html*",
             "webRoot": "${workspaceFolder}",
             "preLaunchTask": "debug-mine"
         },
@@ -20,7 +20,7 @@
             "type": "msedge",
             "address": "127.0.0.1",
             "port": 9223,
-            "urlFilter": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine-field.html*",
+            "urlFilter": "http://127.0.0.1:3000/__tests__/debug/mine-field/mine-field.html*",
             "webRoot": "${workspaceFolder}",
             "preLaunchTask": "debug-mine-field"
         },
@@ -28,17 +28,17 @@
             "name": "Mine コンポーネントテストのデバッグ（VS Code内蔵ブラウザー）",
             "request": "launch",
             "type": "editor-browser",
-            "url": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine.html?vscode-livepreview=true",
+            "url": "http://127.0.0.1:3000/__tests__/debug/mine/mine.html?vscode-livepreview=true",
             "webRoot": "${workspaceFolder}",
-            "preLaunchTask": "build-ui-components"
+            "preLaunchTask": "debug-build"
         },
         {
             "name": "MineField コンポーネントテストのデバッグ（VS Code内蔵ブラウザー）",
             "request": "launch",
             "type": "editor-browser",
-            "url": "http://127.0.0.1:3000/__tests__/ui-components/mine/mine-field.html?vscode-livepreview=true",
+            "url": "http://127.0.0.1:3000/__tests__/debug/mine-field/mine-field.html?vscode-livepreview=true",
             "webRoot": "${workspaceFolder}",
-            "preLaunchTask": "build-ui-components"
+            "preLaunchTask": "debug-build"
         }
     ]
 }
