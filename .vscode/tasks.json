@@ -2,18 +2,18 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "debug-build",
+            "label": "component-preview-build",
             "type": "process",
             "command": "npm.cmd",
             "args": [
                 "run",
-                "debug:build"
+                "component-preview:build"
             ],
             "group": "build",
             "problemMatcher": []
         },
         {
-            "label": "open-mine-debug-browser",
+            "label": "open-component-preview-browser",
             "type": "process",
             "command": "powershell.exe",
             "args": [
@@ -22,38 +22,15 @@
                 "Bypass",
                 "-File",
                 "${workspaceFolder}\\.vscode\\start-edge-debug.ps1",
-                "http://127.0.0.1:3000/__tests__/debug/mine/mine.html?vscode-livepreview=true"
+                "http://127.0.0.1:3000/__tests__/component-preview/index.html?vscode-livepreview=true"
             ],
             "problemMatcher": []
         },
         {
-            "label": "open-mine-field-debug-browser",
-            "type": "process",
-            "command": "powershell.exe",
-            "args": [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "${workspaceFolder}\\.vscode\\start-edge-debug.ps1",
-                "http://127.0.0.1:3000/__tests__/debug/mine-field/mine-field.html?vscode-livepreview=true"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "debug-mine",
+            "label": "debug-component-preview",
             "dependsOn": [
-                "debug-build",
-                "open-mine-debug-browser"
-            ],
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "debug-mine-field",
-            "dependsOn": [
-                "debug-build",
-                "open-mine-field-debug-browser"
+                "component-preview-build",
+                "open-component-preview-browser"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []

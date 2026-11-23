@@ -40,7 +40,7 @@
 
 - Windows の PowerShell では実行ポリシーにより `npm.ps1` の実行が拒否されることがあるため、npm スクリプトは `npm.cmd run <script>` で実行する。`npm run <script>` を試して失敗してからやり直すのではなく、最初から `npm.cmd` を使う。
 - ユニットテスト: `npm.cmd run test:unit`
-- UI コンポーネントのデバッグ用画面のビルド: `npm.cmd run debug:build`
+- UI コンポーネントのプレビュー用画面のビルド: `npm.cmd run component-preview:build`
 - Lint: `npm.cmd run lint`
 - Windows 以外では `npm run <script>` を使う。
 - 変更に関連する最小限の確認を実行し、実行できなかった場合は理由を伝える。
