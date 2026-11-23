@@ -2,9 +2,9 @@ import * as esbuild from 'esbuild';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const BASEDIR = './__tests__/debug';
+const BASEDIR = './__tests__/component-preview';
 
-const targets = (await fs.readdir('./__tests__/debug', { withFileTypes: true }))
+const targets = (await fs.readdir(BASEDIR, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => {
         return {
@@ -13,7 +13,7 @@ const targets = (await fs.readdir('./__tests__/debug', { withFileTypes: true }))
         };
     });
 
-const mineDebugBuildPromises = targets.map((target) => {
+const componentPreviewBuildPromises = targets.map((target) => {
     return esbuild.build({
         entryPoints: [target.entry],
         entryNames: '[name].bundle',
@@ -23,12 +23,4 @@ const mineDebugBuildPromises = targets.map((target) => {
     });
 });
 
-Promise.all(mineDebugBuildPromises);
-
-// const mineDebugBuildPromise = esbuild.build({
-//     entryPoints: ['./__tests__/debug/mine/src/mine.ts'],
-//     entryNames: '[name].bundle',
-//     bundle: true,
-//     sourcemap: true,
-//     outdir: './__tests__/debug/mine/dist',
-// });
+Promise.all(componentPreviewBuildPromises);
