@@ -7,6 +7,12 @@ import {
     type Mocker,
 } from '../../util/document_mock.js';
 
+function assertMineFieldEnabled(mineField: MineField, expected: boolean): void {
+    assert.equal(mineField.enabled, expected);
+    assert.ok(mineField.rows.every((row) => row.enabled === expected));
+    assert.ok(mineField.mines.every((mine) => mine.enabled === expected));
+}
+
 void describe('MineField の振る舞い', () => {
     let mocker: Mocker;
 
@@ -107,6 +113,29 @@ void describe('MineField の振る舞い', () => {
             });
         });
 
+        void it('失敗後は盤面を無効化し、リセットすると再有効化する', () => {
+            const mineField = new MineField({
+                size: 2,
+                bombs: [{ rowId: 0, colId: 0 }],
+            });
+
+            mocker.dispatchMouseEvent(
+                mineField.mine({ rowId: 0, colId: 0 }).element,
+                'click'
+            );
+
+            assertMineFieldEnabled(mineField, false);
+
+            const unopenedMine = mineField.mine({ rowId: 1, colId: 1 });
+            mocker.dispatchMouseEvent(unopenedMine.element, 'click');
+
+            assert.equal(unopenedMine.state, 'closed');
+
+            mineField.reset();
+
+            assertMineFieldEnabled(mineField, true);
+        });
+
         void it('空のマスを開くと周囲も開き、すべて解決すると ended を通知する', () => {
             const mineField = new MineField({ size: 2, bombs: [] });
             let endedCount = 0;
@@ -151,6 +180,17 @@ void describe('MineField の振る舞い', () => {
                 estimated: 0,
                 remained: 0,
             });
+        });
+
+        void it('すべて解決すると盤面と子コンポーネントを無効化する', () => {
+            const mineField = new MineField({ size: 2, bombs: [] });
+
+            mocker.dispatchMouseEvent(
+                mineField.mine({ rowId: 0, colId: 0 }).element,
+                'click'
+            );
+
+            assertMineFieldEnabled(mineField, false);
         });
     });
 

@@ -68,6 +68,19 @@ export abstract class UiComponentWithChildrenBase<
     }
 
     /**
+     * コンポーネントの有効性を設定する。
+     * 子コンポーネントまで有効性を設定する。
+     */
+    public override set enabled(value: boolean) {
+        super.enabled = value;
+        this.#children.forEach((child) => {
+            child.enabled = value;
+        });
+    }
+    public override get enabled(): boolean {
+        return super.enabled;
+    }
+    /**
      * 子コンポーネントを指定した数だけ生成し直します。
      *
      * @param childrenCount - 生成する子コンポーネントの数です。

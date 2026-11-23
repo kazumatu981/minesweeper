@@ -166,6 +166,30 @@ void describe('子コンポーネントを持つ UI 基底クラス', () => {
         assert.equal(component.element.childElementCount, 0);
     });
 
+    void it('有効性の変更をすべての子コンポーネントへ伝える', () => {
+        const component = new TestParent({
+            id: 'test-parent',
+            classes: [],
+            childrenCount: 2,
+            generateChild: (index) => new TestChild(index),
+        });
+
+        component.enabled = false;
+
+        assert.equal(component.enabled, false);
+        assert.deepEqual(
+            component.children.map((child) => child.enabled),
+            [false, false]
+        );
+
+        component.enabled = true;
+
+        assert.deepEqual(
+            component.children.map((child) => child.enabled),
+            [true, true]
+        );
+    });
+
     void it('対応付けられた子イベントの引数をすべて親へ伝える', () => {
         const component = new TestParent({
             id: 'test-parent',
