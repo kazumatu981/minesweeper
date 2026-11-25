@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { MineRow } from '../../../../src/components/mine-row.js';
-import { Mine } from '../../../../src/components/mine.js';
 import { mockDocument, restoreDocument } from '../../util/document_mock.js';
 
 void describe('MineRow のコンストラクター', () => {
@@ -17,8 +16,6 @@ void describe('MineRow のコンストラクター', () => {
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
-            mineGenerator: (rowId, colId) =>
-                new Mine({ rowId, colId }, 3),
         });
 
         assert.equal(mineRow.rowId, 2);
@@ -26,21 +23,11 @@ void describe('MineRow のコンストラクター', () => {
     });
 
     void it('各列に対応するマスを順番に生成する', () => {
-        const generatedCoordinates: [number, number][] = [];
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
-            mineGenerator: (rowId, colId) => {
-                generatedCoordinates.push([rowId, colId]);
-                return new Mine({ rowId, colId }, 3);
-            },
         });
 
-        assert.deepEqual(generatedCoordinates, [
-            [2, 0],
-            [2, 1],
-            [2, 2],
-        ]);
         assert.deepEqual(
             mineRow.children.map(({ rowId, colId }) => [rowId, colId]),
             [
@@ -59,8 +46,6 @@ void describe('MineRow のコンストラクター', () => {
         const mineRow = new MineRow({
             rowId: 2,
             size: 3,
-            mineGenerator: (rowId, colId) =>
-                new Mine({ rowId, colId }, 3),
         });
 
         assert.deepEqual(mineRow.classes, ['___mine_row_base']);
@@ -72,8 +57,6 @@ void describe('MineRow のコンストラクター', () => {
         const mineRow = new MineRow({
             rowId: 19,
             size: 20,
-            mineGenerator: (rowId, colId) =>
-                new Mine({ rowId, colId }, 20),
         });
 
         assert.equal(mineRow.rowId, 19);
@@ -87,8 +70,6 @@ void describe('MineRow のコンストラクター', () => {
                 new MineRow({
                     rowId: 0,
                     size,
-                    mineGenerator: (rowId, colId) =>
-                        new Mine({ rowId, colId }, size),
                 });
             });
         }
@@ -97,8 +78,6 @@ void describe('MineRow のコンストラクター', () => {
             new MineRow({
                 rowId: 0,
                 size: 0,
-                mineGenerator: (rowId, colId) =>
-                    new Mine({ rowId, colId }, 0),
             });
         });
     });
@@ -109,8 +88,6 @@ void describe('MineRow のコンストラクター', () => {
                 new MineRow({
                     rowId,
                     size: 3,
-                    mineGenerator: (generatedRowId, colId) =>
-                        new Mine({ rowId: generatedRowId, colId }, 3),
                 });
             });
         }

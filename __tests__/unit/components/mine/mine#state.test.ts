@@ -51,7 +51,7 @@ void describe('Mine の状態遷移', () => {
     });
 
     void it('生成直後は closed 状態で、イベントを通知しない', () => {
-        const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+        const mine = new Mine({ rowId: 1, colId: 1 });
         mockEvents(mine);
 
         assert.equal(mine.state, 'closed');
@@ -65,7 +65,7 @@ void describe('Mine の状態遷移', () => {
     });
 
     void it('reset すると初期状態に戻り、状態変更イベントを通知する', () => {
-        const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+        const mine = new Mine({ rowId: 1, colId: 1 });
         mockEvents(mine);
         mine.neighborCount = 2;
         mine.touch();
@@ -87,7 +87,7 @@ void describe('Mine の状態遷移', () => {
 
     void describe('touch の振る舞い', () => {
         void it('地雷でないマスに触れると touched 状態になり、関連イベントを通知する', () => {
-            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+            const mine = new Mine({ rowId: 1, colId: 1 });
             mockEvents(mine);
 
             mine.touch();
@@ -102,7 +102,7 @@ void describe('Mine の状態遷移', () => {
         });
 
         void it('地雷に触れても状態とイベントは変化しない', () => {
-            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+            const mine = new Mine({ rowId: 1, colId: 1 });
             mine.isBomb = true;
             mockEvents(mine);
 
@@ -120,7 +120,7 @@ void describe('Mine の状態遷移', () => {
 
     void describe('右クリック時の状態遷移', () => {
         void it('地雷でないマスは closed → mustBe → mayBe → closed と遷移する', () => {
-            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+            const mine = new Mine({ rowId: 1, colId: 1 });
             mockEvents(mine);
 
             mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -152,7 +152,7 @@ void describe('Mine の状態遷移', () => {
             });
         });
         void it('地雷のマスも closed → mustBe → mayBe → closed と遷移する', () => {
-            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+            const mine = new Mine({ rowId: 1, colId: 1 });
             mine.isBomb = true;
             mockEvents(mine);
 
@@ -184,7 +184,7 @@ void describe('Mine の状態遷移', () => {
             });
         });
         void it('opened 状態では右クリックしても状態とイベントは変化しない', () => {
-            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+            const mine = new Mine({ rowId: 1, colId: 1 });
             mockEvents(mine);
 
             mocker.dispatchMouseEvent(mine.element, 'click');
@@ -200,7 +200,7 @@ void describe('Mine の状態遷移', () => {
             });
         });
         void it('bomb 状態では右クリックしても状態とイベントは変化しない', () => {
-            const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+            const mine = new Mine({ rowId: 1, colId: 1 });
             mine.isBomb = true;
             mockEvents(mine);
 
@@ -220,7 +220,7 @@ void describe('Mine の状態遷移', () => {
     void describe('クリック時の状態遷移', () => {
         void describe('closed 状態', () => {
             void it('地雷でないマスをクリックすると opened 状態になる', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'click');
@@ -233,7 +233,7 @@ void describe('Mine の状態遷移', () => {
                 });
             });
             void it('地雷をクリックすると bomb 状態になる', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -249,7 +249,7 @@ void describe('Mine の状態遷移', () => {
         });
         void describe('touched 状態', () => {
             void it('クリックしても状態とイベントは変化しない', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mockEvents(mine);
 
                 mine.touch();
@@ -267,7 +267,7 @@ void describe('Mine の状態遷移', () => {
         });
         void describe('mayBe 状態', () => {
             void it('地雷でないマスをクリックすると opened 状態になる', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -284,7 +284,7 @@ void describe('Mine の状態遷移', () => {
                 });
             });
             void it('地雷をクリックすると bomb 状態になる', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -304,7 +304,7 @@ void describe('Mine の状態遷移', () => {
         });
         void describe('mustBe 状態', () => {
             void it('地雷でないマスをクリックしても状態は変化しない', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
@@ -320,7 +320,7 @@ void describe('Mine の状態遷移', () => {
                 });
             });
             void it('地雷をクリックしても状態は変化しない', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -339,7 +339,7 @@ void describe('Mine の状態遷移', () => {
         });
         void describe('bomb 状態', () => {
             void it('クリックしても状態は変化しない', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mine.isBomb = true;
                 mockEvents(mine);
 
@@ -358,7 +358,7 @@ void describe('Mine の状態遷移', () => {
         });
         void describe('opened 状態', () => {
             void it('クリックしても状態は変化しない', () => {
-                const mine = new Mine({ rowId: 1, colId: 1 }, 3);
+                const mine = new Mine({ rowId: 1, colId: 1 });
                 mockEvents(mine);
 
                 mocker.dispatchMouseEvent(mine.element, 'click');
