@@ -14,6 +14,7 @@ import {
     type MinesOption,
     type MinePosition,
     safeGetBomPositions,
+    getNeighborPositions,
 } from './mine-position.js';
 import { MineRow } from './mine-row.js';
 import { Mine, type MineEvent } from './mine.js';
@@ -137,7 +138,7 @@ export class MineField
 {
     //#region プロパティの内部ストア
     /** 盤面のサイズと爆弾配置の設定 */
-    #options: { current: MineFieldOptions };
+    #options: MineFieldOptions;
     //#endregion
 
     //#region ステートマシン関連のプロパティ
@@ -206,22 +207,11 @@ export class MineField
      */
     public constructor(options: MineFieldOptions) {
         __assertMineFieldOptions(options);
-        const optionsReference = { current: options };
 
         super({
             id: formatMineFieldId(),
             classes: [MINE_FIELD_BASE_CLASS],
             childrenCount: options.size,
-            generateChild: (rowId) =>
-                new MineRow({
-                    rowId,
-                    size: optionsReference.current.size,
-                    mineGenerator: (rowId, colId) =>
-                        new Mine(
-                            { rowId, colId },
-                            optionsReference.current.size
-                        ),
-                }),
             eventMap,
         });
 
@@ -231,10 +221,11 @@ export class MineField
             MineField
         >('initialized', this);
 
-        this.#options = optionsReference;
+        this.#options = options;
 
         this.#registerEvents();
 
+        this.resetChildren(options.size);
         this.reset();
     }
     //#endregion
@@ -246,7 +237,7 @@ export class MineField
      * @returns 盤面の1辺のマス数
      */
     public get size(): number {
-        return this.#options.current.size;
+        return this.#options.size;
     }
 
     /**
@@ -324,8 +315,8 @@ export class MineField
      */
     public reset(options?: MineFieldOptions): void {
         if (options) {
-            this.#options.current = options;
-            this.resetChildren(this.#options.current.size);
+            this.#options = options;
+            this.resetChildren(this.#options.size);
         }
         this.#initialize();
         // 状態を遷移させる
@@ -354,20 +345,28 @@ export class MineField
         this.emit('score-changed', this);
     }
 
+    public getNeighborMines(position: MinePosition): Mine[] {
+        return getNeighborPositions(position, this.size).map((position) =>
+            this.mine(position)
+        );
+    }
     /**
      * 開封したマスの周辺にあるマスをタッチする。
      *
      * @param mine 開封したMine
      */
     protected touch(mine: Mine): void {
-        mine.neighborPositions
-            .map((position) => this.mine(position))
-            .filter((neighborMine) => neighborMine !== mine)
-            .forEach((neighborMine) => {
-                neighborMine.touch();
-            });
+        this.getNeighborMines(mine).forEach((neighborMine) => {
+            neighborMine.touch();
+        });
     }
 
+    protected override generateChild(index: number): MineRow {
+        return new MineRow({
+            rowId: index,
+            size: this.size,
+        });
+    }
     /** 右クリック処理。盤面自体では何も行わない。 */
     protected override onRightClick(): void {}
 
@@ -384,15 +383,15 @@ export class MineField
         });
 
         // Bombを設定する
-        safeGetBomPositions(this.#options.current).forEach((position) => {
+        safeGetBomPositions(this.#options).forEach((position) => {
             this.mine(position).isBomb = true;
         });
 
         // 近隣のBombの個数を調整する
         this.mines.forEach((mine) => {
-            mine.neighborCount = mine.neighborPositions
-                .map((position) => this.mine(position))
-                .filter((mine) => mine.isBomb).length;
+            mine.neighborCount = this.getNeighborMines(mine).filter(
+                (mine) => mine.isBomb
+            ).length;
         });
     }
 

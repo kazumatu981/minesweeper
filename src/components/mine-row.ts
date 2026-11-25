@@ -25,11 +25,6 @@ function formatMineRowId(rowId: number): string {
 //#endregion
 
 /**
- * 指定した行番号と列番号からMineを生成する関数。
- */
-type MineGenerator = (rowId: number, colId: number) => Mine;
-
-/**
  * 1行分のMine配置を表す設定情報。
  */
 export interface MineRowConfig {
@@ -37,8 +32,6 @@ export interface MineRowConfig {
     rowId: number;
     /** 行内のマス数 */
     size: number;
-    /** 行の各マスを生成する関数 */
-    mineGenerator: MineGenerator;
 }
 
 const eventMap = new Map<MineEvent, MineEvent>([
@@ -67,7 +60,7 @@ export class MineRow extends UiComponentWithChildrenBase<
      * @param mineRowConfig 1行分の配置設定
      */
     public constructor(mineRowConfig: MineRowConfig) {
-        const { rowId, size, mineGenerator } = mineRowConfig;
+        const { rowId, size } = mineRowConfig;
         __assertBetween(size, 0, SIZE_MAX);
         __assertBetween(rowId, 0, size - 1);
 
@@ -75,11 +68,12 @@ export class MineRow extends UiComponentWithChildrenBase<
             id: formatMineRowId(rowId),
             classes: [MINE_ROW_BASE_CLASS],
             childrenCount: size,
-            generateChild: (colId) => mineGenerator(rowId, colId),
             eventMap,
         });
         this.#rowId = rowId;
         this.#size = size;
+
+        this.resetChildren(size);
     }
 
     /**
@@ -98,6 +92,10 @@ export class MineRow extends UiComponentWithChildrenBase<
      */
     public get size(): number {
         return this.#size;
+    }
+
+    protected override generateChild(index: number): Mine {
+        return new Mine({ rowId: this.rowId, colId: index });
     }
 
     protected override onRightClick(): void {}

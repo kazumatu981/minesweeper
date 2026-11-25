@@ -11,7 +11,7 @@ import {
     formatIdWithRandomSuffix,
 } from '../common/index.js';
 
-import { type MinePosition, getNeighborPositions } from './mine-position.js';
+import { type MinePosition } from './mine-position.js';
 
 //#region 状態、イベント、アクションの定義
 /**
@@ -133,8 +133,6 @@ export class Mine
     //#region プロパティの内部ストア
     /** 場所 */
     readonly #position;
-    /** 盤面のサイズ */
-    readonly #size;
     /** 近隣の爆弾数 */
     #neighborBombCount = 0;
     /** 爆弾かどうか */
@@ -254,7 +252,7 @@ export class Mine
      * @param rowId 行番号
      * @param colId 列番号
      */
-    public constructor(position: MinePosition, size: number) {
+    public constructor(position: MinePosition) {
         // 親クラスのコンストラクタ
         super({
             id: formatMineId(position),
@@ -265,7 +263,6 @@ export class Mine
             this
         );
         this.#position = position;
-        this.#size = size;
 
         // 表面を調整する
         this.#adjustFace();
@@ -273,6 +270,9 @@ export class Mine
 
     //#region Properties
 
+    public get position(): MinePosition {
+        return this.#position;
+    }
     /**
      * 行番号を取得する。
      *
@@ -357,14 +357,6 @@ export class Mine
      */
     public touch() {
         this.#sateMachine.applyAction('touch');
-    }
-
-    /**
-     * 近くのMineの位置を取得する
-     * @returns 近くのMineの位置
-     */
-    public get neighborPositions(): MinePosition[] {
-        return getNeighborPositions(this.#position, this.#size);
     }
 
     //#region イベントハンドラ
