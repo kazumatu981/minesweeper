@@ -82,6 +82,45 @@ void describe('MineField の振る舞い', () => {
         });
     });
 
+    void describe('getNeighborMines', () => {
+        void it('自身を含む周囲の全マスを返す', () => {
+            const mineField = new MineField({ size: 3, bombs: [] });
+
+            assert.deepEqual(
+                mineField
+                    .getNeighborMines({ rowId: 1, colId: 1 })
+                    .map((mine) => mine.position),
+                [
+                    { rowId: 0, colId: 0 },
+                    { rowId: 1, colId: 0 },
+                    { rowId: 2, colId: 0 },
+                    { rowId: 0, colId: 1 },
+                    { rowId: 1, colId: 1 },
+                    { rowId: 2, colId: 1 },
+                    { rowId: 0, colId: 2 },
+                    { rowId: 1, colId: 2 },
+                    { rowId: 2, colId: 2 },
+                ]
+            );
+        });
+
+        void it('角のマスでは盤面内のマスだけを返す', () => {
+            const mineField = new MineField({ size: 3, bombs: [] });
+
+            assert.deepEqual(
+                mineField
+                    .getNeighborMines({ rowId: 0, colId: 0 })
+                    .map((mine) => mine.position),
+                [
+                    { rowId: 0, colId: 0 },
+                    { rowId: 1, colId: 0 },
+                    { rowId: 0, colId: 1 },
+                    { rowId: 1, colId: 1 },
+                ]
+            );
+        });
+    });
+
     void describe('イベントとスコア', () => {
         void it('地雷を開くと failed を通知し、スコアを更新する', () => {
             const mineField = new MineField({
