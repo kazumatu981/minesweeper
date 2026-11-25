@@ -8,8 +8,7 @@ import {
     StateMachine,
     UiComponentBase,
     formatClass,
-    formatId,
-    createRandomString,
+    formatIdWithRandomSuffix,
 } from '../common/index.js';
 
 import { type MinePosition, getNeighborPositions } from './mine-position.js';
@@ -49,8 +48,6 @@ type MineAction =
 const MINE_PREFIX = '___mine';
 
 //#region 識別子
-const ID_CHARACTERS =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 /**
  * Mineの識別子を生成する。
  *
@@ -59,9 +56,8 @@ const ID_CHARACTERS =
  * @returns 行番号と列番号を含むMineの識別子
  */
 function formatMineId(position: MinePosition): string {
-    return formatId(
+    return formatIdWithRandomSuffix(
         MINE_PREFIX,
-        createRandomString(8, ID_CHARACTERS),
         position.rowId,
         position.colId
     );

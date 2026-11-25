@@ -5,8 +5,7 @@ import {
     StateMachine,
     UiComponentWithChildrenBase,
     formatClass,
-    formatId,
-    createRandomString,
+    formatIdWithRandomSuffix,
     __assertBetween,
     __assertIsUndefined,
     __assertIsDefined,
@@ -46,14 +45,12 @@ const SIZE_MAX = 20;
 
 //#region 識別子, クラス
 const MINE_FIELD_PREFIX = '___mine_field';
-const ID_CHARACTERS =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 /**
  * 固有な識別子を作成する
  * @returns 識別子
  */
 function formatMineFieldId(): string {
-    return formatId(MINE_FIELD_PREFIX, createRandomString(8, ID_CHARACTERS));
+    return formatIdWithRandomSuffix(MINE_FIELD_PREFIX);
 }
 /**
  * MineFieldCSSクラス名
@@ -331,7 +328,7 @@ export class MineField
             this.resetChildren(this.#options.current.size);
         }
         this.#initialize();
-        // 爆弾をセットする
+        // 状態を遷移させる
         this.#stateMachine.applyAction('reset');
     }
     //#endregion

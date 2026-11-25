@@ -1,3 +1,4 @@
+import { createRandomString } from './random.js';
 /**
  * 指定した区切り文字で文字列を連結する共通フォーマッター。
  *
@@ -37,6 +38,18 @@ export function formatId(
     return _format(prefix, suffix, '-', ...args);
 }
 
+/**
+ * 乱数文字列付きのID形式文字列を生成する
+ * @param prefix 先頭の識別子
+ * @param args 連結する追加要素
+ * @returns ハイフン区切りのID文字列(乱数文字列付き)
+ */
+export function formatIdWithRandomSuffix(
+    prefix: string,
+    ...args: (string | number)[]
+) {
+    return formatId(prefix, createRandomString(8), ...args);
+}
 /**
  * CSS クラス名を生成する。
  *
