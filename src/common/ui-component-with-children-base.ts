@@ -99,6 +99,14 @@ export abstract class UiComponentWithChildrenBase<
         children.forEach((child) => {
             this.element.appendChild(child.element);
         });
+
+        // イベントのマッピング
+        children.forEach((child) => {
+            this.#eventMap?.keys().forEach((childEvent) => {
+                const myEvent = this.#eventMap!.get(childEvent)!;
+                child.on(childEvent, (...args) => this.emit(myEvent, ...args));
+            });
+        });
     }
 
     /**
@@ -108,19 +116,20 @@ export abstract class UiComponentWithChildrenBase<
      * @returns 生成した子コンポーネントの一覧です。
      */
     private generateChildren(childrenCount: number): TChild[] {
-        const children = Array.from({ length: childrenCount })
-            .map((_, index) => this.#generateChild(index))
-            .map((child) => {
-                if (this.#eventMap) {
-                    this.#eventMap.keys().forEach((childEvent) => {
-                        const myEvent = this.#eventMap!.get(childEvent)!;
-                        child.on(childEvent, (...args) =>
-                            this.emit(myEvent, ...args)
-                        );
-                    });
-                }
-                return child;
-            });
+        const children = Array.from({ length: childrenCount }).map((_, index) =>
+            this.#generateChild(index)
+        );
+        // .map((child) => {
+        //     if (this.#eventMap) {
+        //         this.#eventMap.keys().forEach((childEvent) => {
+        //             const myEvent = this.#eventMap!.get(childEvent)!;
+        //             child.on(childEvent, (...args) =>
+        //                 this.emit(myEvent, ...args)
+        //             );
+        //         });
+        //     }
+        //     return child;
+        // });
         return children;
     }
 }
