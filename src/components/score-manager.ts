@@ -5,6 +5,20 @@ import {
 } from '../common/index.js';
 
 type ScoreManagerEvents = 'score-reset' | 'score-changed';
+
+//#region スコア定義
+export interface MineScore {
+    /** 盤面のマス数 */
+    total: number;
+    /** 爆弾だと確定しているマス数 */
+    flagged: number;
+    /** 開封済み、または周辺の開封によりタッチされたマス数 */
+    estimated: number;
+    /** 未確定のマス数 */
+    remained: number;
+}
+//#endregion
+
 export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
     /** 盤面のマス数 */
     #total: number = 0;
@@ -32,7 +46,7 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
 
         if (this.#flagged !== value) {
             this.#flagged = value;
-            this.emit('score-changed', this);
+            this.emit('score-changed', this, ['flagged', 'remained']);
         }
     }
 
@@ -46,7 +60,7 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
 
         if (this.#estimated !== value) {
             this.#estimated = value;
-            this.emit('score-changed', this);
+            this.emit('score-changed', this, ['estimated', 'solved']);
         }
     }
     /** 解決したマス数 */
@@ -56,6 +70,15 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
     /** 未解決なマス数 */
     public get remained(): number {
         return this.total - this.solved;
+    }
+
+    public get score(): MineScore {
+        return {
+            estimated: this.estimated,
+            flagged: this.flagged,
+            remained: this.remained,
+            total: this.total,
+        };
     }
 
     /**

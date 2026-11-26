@@ -16,6 +16,7 @@ import {
     safeGetBomPositions,
     getNeighborPositions,
 } from './mine-position.js';
+import { type MineScore } from './score-manager.js';
 import { MineRow } from './mine-row.js';
 import { Mine, type MineEvent } from './mine.js';
 
@@ -114,19 +115,6 @@ const eventMap = new Map<MineEvent, MineFieldEvent>([
     ['opened', 'opened'],
     ['state-change', 'state-change'],
 ]);
-//#endregion
-
-//#region スコア定義
-export interface MineScore {
-    /** 盤面のマス数 */
-    total: number;
-    /** 爆弾だと確定しているマス数 */
-    flagged: number;
-    /** 開封済み、または周辺の開封によりタッチされたマス数 */
-    estimated: number;
-    /** 未確定のマス数 */
-    remained: number;
-}
 //#endregion
 
 /**
