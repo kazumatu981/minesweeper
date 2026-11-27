@@ -4,22 +4,35 @@ import {
     EventDispatcher,
 } from '../common/index.js';
 
-type ScoreManagerEvents = 'score-reset' | 'score-changed';
+type ScoreManagerEvents = 'score-changed';
 
 //#region スコア定義
 export interface MineScore {
-    /** 盤面のマス数 */
-    total: number;
     /** 爆弾だと確定しているマス数 */
     flagged: number;
     /** 開封済み、または周辺の開封によりタッチされたマス数 */
     estimated: number;
+    /** 解決済みのマス数 */
+    readonly solved: number;
     /** 未確定のマス数 */
-    remained: number;
+    readonly remained: number;
+    /** 盤面のマス数 */
+    readonly total: number;
 }
 //#endregion
 
-export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
+const MINE_SCORE_KEYS: (keyof MineScore)[] = [
+    'flagged',
+    'estimated',
+    'solved',
+    'remained',
+    'total',
+];
+
+export class ScoreManager
+    extends EventDispatcher<ScoreManagerEvents>
+    implements MineScore
+{
     /** 盤面のマス数 */
     #total: number = 0;
     /** 爆弾だと確定しているマス数 */
@@ -46,7 +59,7 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
 
         if (this.#flagged !== value) {
             this.#flagged = value;
-            this.emit('score-changed', this, ['flagged', 'remained']);
+            this.emit('score-changed', this, ['flagged', 'solved', 'remained']);
         }
     }
 
@@ -60,7 +73,11 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
 
         if (this.#estimated !== value) {
             this.#estimated = value;
-            this.emit('score-changed', this, ['estimated', 'solved']);
+            this.emit('score-changed', this, [
+                'estimated',
+                'solved',
+                'remained',
+            ]);
         }
     }
     /** 解決したマス数 */
@@ -72,15 +89,10 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
         return this.total - this.solved;
     }
 
-    public get score(): MineScore {
-        return {
-            estimated: this.estimated,
-            flagged: this.flagged,
-            remained: this.remained,
-            total: this.total,
-        };
+    public update(flagged: number, estimated: number) {
+        this.flagged = flagged;
+        this.estimated = estimated;
     }
-
     /**
      * スコアをリセットする
      * @param total 合計のマス数
@@ -93,7 +105,7 @@ export class ScoreManager extends EventDispatcher<ScoreManagerEvents> {
         this.#total = total;
         this.#flagged = 0;
         this.#estimated = 0;
-        this.emit('score-reset', this);
+        this.emit('score-changed', this, MINE_SCORE_KEYS);
         return this;
     }
 }

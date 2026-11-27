@@ -1,11 +1,34 @@
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { MineField } from '../../../../src/components/mine-field.js';
+import {
+    ScoreManager,
+    type MineScore,
+} from '../../../../src/components/score-manager.js';
 import {
     mockDocument,
     restoreDocument,
     type Mocker,
 } from '../../util/document_mock.js';
+
+function createMineField(
+    options: ConstructorParameters<typeof MineField>[0]
+): MineField {
+    return new MineField(
+        options,
+        new ScoreManager(options.size * options.size)
+    );
+}
+
+function assertMineScore(
+    mineField: MineField,
+    expected: Pick<MineScore, 'total' | 'flagged' | 'estimated' | 'remained'>
+): void {
+    assert.equal(mineField.score.total, expected.total);
+    assert.equal(mineField.score.flagged, expected.flagged);
+    assert.equal(mineField.score.estimated, expected.estimated);
+    assert.equal(mineField.score.remained, expected.remained);
+}
 
 function assertMineFieldEnabled(mineField: MineField, expected: boolean): void {
     assert.equal(mineField.enabled, expected);
@@ -26,7 +49,7 @@ void describe('MineField の振る舞い', () => {
 
     void describe('コンストラクター', () => {
         void it('指定したサイズに応じた行とマスを生成する', () => {
-            const mineField = new MineField({
+            const mineField = createMineField({
                 size: 2,
                 bombs: [{ rowId: 0, colId: 0 }],
             });
@@ -44,8 +67,11 @@ void describe('MineField の振る舞い', () => {
                 ]
             );
             assert.equal(mineField.mine({ rowId: 0, colId: 0 }).isBomb, true);
-            assert.equal(mineField.mine({ rowId: 1, colId: 1 }).neighborCount, 1);
-            assert.deepEqual(mineField.score, {
+            assert.equal(
+                mineField.mine({ rowId: 1, colId: 1 }).neighborCount,
+                1
+            );
+            assertMineScore(mineField, {
                 total: 4,
                 flagged: 0,
                 estimated: 0,
@@ -56,24 +82,24 @@ void describe('MineField の振る舞い', () => {
         void it('不正な盤面サイズや地雷の設定を拒否する', () => {
             for (const size of [-1, 21]) {
                 assert.throws(() => {
-                    new MineField({ size, bombs: [] });
+                    createMineField({ size, bombs: [] });
                 });
             }
 
             assert.throws(() => {
-                new MineField({ size: 2 });
+                createMineField({ size: 2 });
             });
             assert.throws(() => {
-                new MineField({ size: 2, bombCount: 5 });
+                createMineField({ size: 2, bombCount: 5 });
             });
             assert.throws(() => {
-                new MineField({
+                createMineField({
                     size: 2,
                     bombs: [{ rowId: -1, colId: 0 }],
                 });
             });
             assert.throws(() => {
-                new MineField({
+                createMineField({
                     size: 2,
                     bombs: [],
                     bombCount: 0,
@@ -84,7 +110,7 @@ void describe('MineField の振る舞い', () => {
 
     void describe('getNeighborMines', () => {
         void it('自身を含む周囲の全マスを返す', () => {
-            const mineField = new MineField({ size: 3, bombs: [] });
+            const mineField = createMineField({ size: 3, bombs: [] });
 
             assert.deepEqual(
                 mineField
@@ -105,7 +131,7 @@ void describe('MineField の振る舞い', () => {
         });
 
         void it('角のマスでは盤面内のマスだけを返す', () => {
-            const mineField = new MineField({ size: 3, bombs: [] });
+            const mineField = createMineField({ size: 3, bombs: [] });
 
             assert.deepEqual(
                 mineField
@@ -123,18 +149,12 @@ void describe('MineField の振る舞い', () => {
 
     void describe('イベントとスコア', () => {
         void it('地雷を開くと failed を通知し、スコアを更新する', () => {
-            const mineField = new MineField({
+            const failedMock = mock.fn();
+            const mineField = createMineField({
                 size: 2,
                 bombs: [{ rowId: 0, colId: 0 }],
             });
-            let failedCount = 0;
-            let scoreChangedCount = 0;
-            mineField.on('failed', () => {
-                failedCount += 1;
-            });
-            mineField.on('score-changed', () => {
-                scoreChangedCount += 1;
-            });
+            mineField.on('failed', failedMock);
 
             mocker.dispatchMouseEvent(
                 mineField.mine({ rowId: 0, colId: 0 }).element,
@@ -142,9 +162,8 @@ void describe('MineField の振る舞い', () => {
             );
 
             assert.equal(mineField.mine({ rowId: 0, colId: 0 }).state, 'bomb');
-            assert.equal(failedCount, 1);
-            assert.equal(scoreChangedCount, 1);
-            assert.deepEqual(mineField.score, {
+            assert.equal(failedMock.mock.callCount(), 1);
+            assertMineScore(mineField, {
                 total: 4,
                 flagged: 0,
                 estimated: 0,
@@ -153,7 +172,7 @@ void describe('MineField の振る舞い', () => {
         });
 
         void it('失敗後は盤面を無効化し、リセットすると再有効化する', () => {
-            const mineField = new MineField({
+            const mineField = createMineField({
                 size: 2,
                 bombs: [{ rowId: 0, colId: 0 }],
             });
@@ -176,19 +195,17 @@ void describe('MineField の振る舞い', () => {
         });
 
         void it('空のマスを開くと周囲も開き、すべて解決すると ended を通知する', () => {
-            const mineField = new MineField({ size: 2, bombs: [] });
-            let endedCount = 0;
-            mineField.on('ended', () => {
-                endedCount += 1;
-            });
+            const endedMock = mock.fn();
+            const mineField = createMineField({ size: 2, bombs: [] });
+            mineField.on('ended', endedMock);
 
             mocker.dispatchMouseEvent(
                 mineField.mine({ rowId: 0, colId: 0 }).element,
                 'click'
             );
 
-            assert.equal(endedCount, 1);
-            assert.deepEqual(mineField.score, {
+            assert.equal(endedMock.mock.callCount(), 1);
+            assertMineScore(mineField, {
                 total: 4,
                 flagged: 0,
                 estimated: 4,
@@ -196,24 +213,23 @@ void describe('MineField の振る舞い', () => {
             });
             assert.ok(
                 mineField.mines.every(
-                    (mine) => mine.state === 'opened' || mine.state === 'touched'
+                    (mine) =>
+                        mine.state === 'opened' || mine.state === 'touched'
                 )
             );
         });
 
         void it('すべてのマスに旗を立てると ended を通知する', () => {
-            const mineField = new MineField({ size: 2, bombs: [] });
-            let endedCount = 0;
-            mineField.on('ended', () => {
-                endedCount += 1;
-            });
+            const endedMock = mock.fn();
+            const mineField = createMineField({ size: 2, bombs: [] });
+            mineField.on('ended', endedMock);
 
             mineField.mines.forEach((mine) => {
                 mocker.dispatchMouseEvent(mine.element, 'contextmenu');
             });
 
-            assert.equal(endedCount, 1);
-            assert.deepEqual(mineField.score, {
+            assert.equal(endedMock.mock.callCount(), 1);
+            assertMineScore(mineField, {
                 total: 4,
                 flagged: 4,
                 estimated: 0,
@@ -222,7 +238,7 @@ void describe('MineField の振る舞い', () => {
         });
 
         void it('すべて解決すると盤面と子コンポーネントを無効化する', () => {
-            const mineField = new MineField({ size: 2, bombs: [] });
+            const mineField = createMineField({ size: 2, bombs: [] });
 
             mocker.dispatchMouseEvent(
                 mineField.mine({ rowId: 0, colId: 0 }).element,
@@ -234,7 +250,7 @@ void describe('MineField の振る舞い', () => {
     });
 
     void it('新しいサイズと地雷の位置で盤面をリセットする', () => {
-        const mineField = new MineField({
+        const mineField = createMineField({
             size: 2,
             bombs: [{ rowId: 0, colId: 0 }],
         });
@@ -250,7 +266,7 @@ void describe('MineField の振る舞い', () => {
         assert.equal(mineField.mines.length, 9);
         assert.equal(mineField.mine({ rowId: 0, colId: 0 }).isBomb, false);
         assert.equal(mineField.mine({ rowId: 2, colId: 2 }).isBomb, true);
-        assert.deepEqual(mineField.score, {
+        assertMineScore(mineField, {
             total: 9,
             flagged: 0,
             estimated: 0,

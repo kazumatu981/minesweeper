@@ -14,19 +14,30 @@ export type ScoreboardEvent = 'score-changed';
 const SCOREBOARD_PREFIX = '___scoreboard';
 
 const LABELS: Record<keyof MineScore, string> = {
-    total: 'Total',
-    estimated: 'Estimated',
     flagged: 'Flagged',
+    estimated: 'Estimated',
     remained: 'Remained',
+    solved: 'Solved',
+    total: 'Total',
 };
 
 const SCOREBOARD_BASE_CLASS = formatClass(SCOREBOARD_PREFIX, 'base');
+const SCOREBOARD_HEADER_BASE_CLASS = formatClass(
+    SCOREBOARD_PREFIX,
+    'header',
+    'base'
+);
+const SCOREBOARD_VALUE_BASE_CLASS = formatClass(
+    SCOREBOARD_PREFIX,
+    'value',
+    'base'
+);
 
 /**
  * MineScoreを表形式で表示するスコア盤。
  */
 export class Scoreboard extends UiComponentBase<ScoreboardEvent> {
-    readonly #cells = new Map<keyof MineScore, HTMLTableCellElement>();
+    readonly #cells = new Map<keyof MineScore, HTMLElement>();
     #manager: ScoreManager;
 
     /**
@@ -40,14 +51,14 @@ export class Scoreboard extends UiComponentBase<ScoreboardEvent> {
             classes: [SCOREBOARD_BASE_CLASS],
         });
 
-        this.#createTable();
         this.#manager = manager;
+        this.#createTable();
         this.#connectToManager();
     }
     protected onScoreChanged(keys: (keyof MineScore)[]) {
         keys.forEach((key) => {
             const cell = this.#cells.get(key)!;
-            cell.textContent = String(this.#manager.score[key]);
+            cell.textContent = String(this.#manager[key]);
         });
     }
 
@@ -74,24 +85,40 @@ export class Scoreboard extends UiComponentBase<ScoreboardEvent> {
         const row = this.element.ownerDocument.createElement('tr');
 
         // ヘッダ
-        const header = this.element.ownerDocument.createElement('th');
-        header.scope = 'row';
-        header.textContent = LABELS[key];
-        //TODO スタイルのクラスを設定する
-
+        const header = this.#createHeader(key);
         // 値
-        const cell = this.element.ownerDocument.createElement('td');
-        cell.textContent = '0';
+        const cell = this.#createValue(key);
         this.#cells.set(key, cell);
-        //TODO スタイルのクラスを設定する
 
         // 行にヘッダと値をセットする
         row.append(header, cell);
+
         return row;
     }
 
+    #createHeader(key: keyof MineScore): HTMLElement {
+        const header = this.element.ownerDocument.createElement('th');
+        header.classList.add(
+            SCOREBOARD_HEADER_BASE_CLASS,
+            formatClass(SCOREBOARD_PREFIX, 'header', key)
+        );
+        header.scope = 'row';
+        header.textContent = LABELS[key];
+        return header;
+    }
+
+    #createValue(key: keyof MineScore): HTMLElement {
+        const cell = this.element.ownerDocument.createElement('td');
+        cell.classList.add(
+            SCOREBOARD_VALUE_BASE_CLASS,
+            formatClass(SCOREBOARD_PREFIX, 'value', key)
+        );
+        cell.textContent = String(this.#manager[key]);
+        return cell;
+    }
+
     #connectToManager() {
-        this.#manager.on('score-changed', (manager, keys) => {
+        this.#manager.on('score-changed', (_manager, keys) => {
             this.onScoreChanged(keys as (keyof MineScore)[]);
         });
     }
