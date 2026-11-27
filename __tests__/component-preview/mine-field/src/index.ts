@@ -1,4 +1,5 @@
 import { MineField } from '../../../../src/components/mine-field.js';
+import { Scoreboard } from '../../../../src/components/scoreboard.js';
 
 // ドキュメントをすべて読み込んだら onPageLoad関数を呼び出す
 document.addEventListener('DOMContentLoaded', onPageLoad);
@@ -14,11 +15,13 @@ function onPageLoad() {
         size: 10,
         bombCount: 15,
     });
+    const scoreboard = new Scoreboard(field);
 
     field.on('ended', () => console.log('ended'));
     field.on('failed', () => console.log('failed'));
     field.on('score-changed', () =>
         console.log(`score: ${JSON.stringify(field.score)}`)
     );
+    testPanel?.appendChild(scoreboard.element);
     testPanel?.appendChild(field.element);
 }

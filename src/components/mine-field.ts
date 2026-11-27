@@ -5,8 +5,7 @@ import {
     StateMachine,
     UiComponentWithChildrenBase,
     formatClass,
-    formatId,
-    createRandomString,
+    formatIdWithRandomSuffix,
     __assertBetween,
     __assertIsUndefined,
     __assertIsDefined,
@@ -17,6 +16,7 @@ import {
     safeGetBomPositions,
     getNeighborPositions,
 } from './mine-position.js';
+import { ScoreManager, type MineScore } from './score-manager.js';
 import { MineRow } from './mine-row.js';
 import { Mine, type MineEvent } from './mine.js';
 
@@ -47,14 +47,12 @@ const SIZE_MAX = 20;
 
 //#region 識別子, クラス
 const MINE_FIELD_PREFIX = '___mine_field';
-const ID_CHARACTERS =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 /**
  * 固有な識別子を作成する
  * @returns 識別子
  */
 function formatMineFieldId(): string {
-    return formatId(MINE_FIELD_PREFIX, createRandomString(8, ID_CHARACTERS));
+    return formatIdWithRandomSuffix(MINE_FIELD_PREFIX);
 }
 /**
  * MineFieldCSSクラス名
@@ -119,19 +117,6 @@ const eventMap = new Map<MineEvent, MineFieldEvent>([
 ]);
 //#endregion
 
-//#region スコア定義
-export interface MineScore {
-    /** 盤面のマス数 */
-    total: number;
-    /** 爆弾だと確定しているマス数 */
-    flagged: number;
-    /** 開封済み、または周辺の開封によりタッチされたマス数 */
-    estimated: number;
-    /** 未確定のマス数 */
-    remained: number;
-}
-//#endregion
-
 /**
  * マインスイーパーの盤面全体と、盤面の状態・スコアを管理する。
  */
@@ -142,6 +127,7 @@ export class MineField
     //#region プロパティの内部ストア
     /** 盤面のサイズと爆弾配置の設定 */
     #options: MineFieldOptions;
+    readonly #scoreManager: ScoreManager;
     //#endregion
 
     //#region ステートマシン関連のプロパティ
@@ -208,7 +194,7 @@ export class MineField
      * @param options 盤面サイズと爆弾配置の設定
      * @throws 盤面サイズまたは爆弾配置が有効な範囲外の場合
      */
-    public constructor(options: MineFieldOptions) {
+    public constructor(options: MineFieldOptions, scoreManager: ScoreManager) {
         __assertMineFieldOptions(options);
 
         super({
@@ -225,6 +211,7 @@ export class MineField
         >('initialized', this);
 
         this.#options = options;
+        this.#scoreManager = scoreManager;
 
         this.#registerEvents();
 
@@ -267,19 +254,12 @@ export class MineField
      * @returns マス数、確定数、推定数、未確定数
      */
     public get score(): MineScore {
-        return {
-            total: this.totalCount,
-            flagged: this.flagged.length,
-            estimated: this.estimated.length,
-            remained:
-                this.totalCount - this.flagged.length - this.estimated.length,
-        };
+        return this.#scoreManager;
     }
 
     /** すべてのマスが確定または開封されたかを返す。 */
     private get isEnded(): boolean {
-        const score = this.score;
-        return score.estimated + score.flagged === score.total;
+        return this.#scoreManager.remained === 0;
     }
 
     /** 盤面の総マス数を取得する。 */
@@ -297,6 +277,9 @@ export class MineField
         return this.mines.filter(
             (mine) => mine.state === 'opened' || mine.state === 'touched'
         );
+    }
+    private get bomb(): Mine[] {
+        return this.mines.filter((mine) => mine.isBomb);
     }
     //#endregion
 
@@ -322,8 +305,9 @@ export class MineField
             this.resetChildren(this.#options.size);
         }
         this.#initialize();
-        // 爆弾をセットする
+        // 状態を遷移させる
         this.#stateMachine.applyAction('reset');
+        this.#scoreManager.reset(this.totalCount, this.bomb.length);
     }
     //#endregion
 
@@ -335,7 +319,6 @@ export class MineField
      */
     protected fail(_mine: Mine): void {
         this.#stateMachine.applyAction('fail');
-        this.emit('score-changed', this);
     }
 
     /**
@@ -344,8 +327,8 @@ export class MineField
      * @param _mine 解決されたMine
      */
     protected resolve(_mine: Mine): void {
+        this.#scoreManager.update(this.flagged.length, this.estimated.length);
         this.#stateMachine.applyAction('resolve');
-        this.emit('score-changed', this);
     }
 
     public getNeighborMines(position: MinePosition): Mine[] {
@@ -403,6 +386,10 @@ export class MineField
         this.on('resolved', (mine) => this.resolve(mine as Mine));
         this.on('bombed', (mine) => this.fail(mine as Mine));
         this.on('opened', (mine) => this.touch(mine as Mine));
+
+        this.#scoreManager.on('score-changed', () =>
+            this.emit('score-changed')
+        );
     }
     //#endregion
 }

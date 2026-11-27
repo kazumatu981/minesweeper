@@ -2,8 +2,7 @@ import {
     __assertBetween,
     UiComponentWithChildrenBase,
     formatClass,
-    formatId,
-    createRandomString,
+    formatIdWithRandomSuffix,
 } from '../common/index.js';
 import { Mine, type MineEvent } from './mine.js';
 
@@ -11,8 +10,6 @@ import { Mine, type MineEvent } from './mine.js';
 const SIZE_MAX = 20;
 const MINE_ROW_PREFIX = '___mine_row';
 const BASE_SUFFIX = 'base';
-const ID_CHARACTERS =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
 const MINE_ROW_BASE_CLASS = formatClass(MINE_ROW_PREFIX, BASE_SUFFIX);
 
@@ -23,11 +20,7 @@ const MINE_ROW_BASE_CLASS = formatClass(MINE_ROW_PREFIX, BASE_SUFFIX);
  * @returns 生成したMineRowの識別子
  */
 function formatMineRowId(rowId: number): string {
-    return formatId(
-        MINE_ROW_PREFIX,
-        createRandomString(8, ID_CHARACTERS),
-        rowId
-    );
+    return formatIdWithRandomSuffix(MINE_ROW_PREFIX, rowId);
 }
 //#endregion
 

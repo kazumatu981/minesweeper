@@ -12,6 +12,19 @@ export class AssertionError extends Error {
     }
 }
 
+export function __assertIsInteger(value: number) {
+    if (!Number.isInteger(value)) {
+        throw new AssertionError(`The value ${value} must be Integer`);
+    }
+}
+
+export function __assertEquals<T>(value1: T, value2: T) {
+    if (value1 !== value2) {
+        throw new AssertionError(
+            `The two values must be Equals: [${String(value1)}, ${String(value2)}]`
+        );
+    }
+}
 /**
  * 値が指定された範囲内にあることを確認する
  * @param value 値
@@ -21,8 +34,9 @@ export class AssertionError extends Error {
 export function __assertBetween(
     value: number,
     minimum: number,
-    maximum: number
+    maximum?: number
 ): void {
+    maximum = maximum ?? Number.MAX_SAFE_INTEGER;
     if (value < minimum || maximum < value) {
         throw new AssertionError(
             `The value ${value} is not between ${minimum} and ${maximum}`

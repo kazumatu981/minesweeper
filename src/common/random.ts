@@ -42,13 +42,19 @@ export function createRandomCoordinates(
     }, []);
 }
 
+const DEFAULT_CHARACTERS =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 /**
  * 指定された文字列からランダムな文字列を生成します。
  * @param length 生成する文字列の長さ
  * @param characters 使用する文字の一覧
  * @returns 生成した文字列
  */
-export function createRandomString(length: number, characters: string): string {
+export function createRandomString(
+    length: number,
+    characters?: string
+): string {
+    characters = characters ?? DEFAULT_CHARACTERS;
     return Array.from({ length })
         .map(() => {
             const randomIndex = createRandom(0, characters.length - 1);
