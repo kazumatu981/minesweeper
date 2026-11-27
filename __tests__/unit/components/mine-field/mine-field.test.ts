@@ -16,7 +16,7 @@ function createMineField(
 ): MineField {
     return new MineField(
         options,
-        new ScoreManager(options.size * options.size)
+        new ScoreManager(options.size * options.size, 0)
     );
 }
 

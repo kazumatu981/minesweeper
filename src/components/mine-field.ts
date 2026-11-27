@@ -278,6 +278,9 @@ export class MineField
             (mine) => mine.state === 'opened' || mine.state === 'touched'
         );
     }
+    private get bomb(): Mine[] {
+        return this.mines.filter((mine) => mine.isBomb);
+    }
     //#endregion
 
     //#region 公開メソッド
@@ -304,7 +307,7 @@ export class MineField
         this.#initialize();
         // 状態を遷移させる
         this.#stateMachine.applyAction('reset');
-        this.#scoreManager.reset(this.totalCount);
+        this.#scoreManager.reset(this.totalCount, this.bomb.length);
     }
     //#endregion
 

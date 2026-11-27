@@ -21,17 +21,27 @@ void describe('Scoreboard の振る舞い', () => {
     });
 
     void it('Tableタグと4項目のスコア行を生成する', () => {
-        const scoreManager = new ScoreManager(5);
+        const scoreManager = new ScoreManager(25, 5);
         const scoreboard = new Scoreboard(scoreManager);
+        const rowCount = 6;
 
         assert.equal(scoreboard.element.tagName, 'TABLE');
-        assert.equal(scoreboard.element.querySelectorAll('tr').length, 5);
-        assert.equal(scoreboard.element.querySelectorAll('th').length, 5);
-        assert.equal(scoreboard.element.querySelectorAll('td').length, 5);
+        assert.equal(
+            scoreboard.element.querySelectorAll('tr').length,
+            rowCount
+        );
+        assert.equal(
+            scoreboard.element.querySelectorAll('th').length,
+            rowCount
+        );
+        assert.equal(
+            scoreboard.element.querySelectorAll('td').length,
+            rowCount
+        );
     });
 
     void it('MineFieldのscore-changedイベントで表示を更新する', () => {
-        const scoreManager = new ScoreManager(4);
+        const scoreManager = new ScoreManager(4, 1);
         const field = new MineField(
             {
                 size: 2,

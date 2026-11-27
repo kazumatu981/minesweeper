@@ -18,6 +18,8 @@ export interface MineScore {
     readonly remained: number;
     /** 盤面のマス数 */
     readonly total: number;
+    /**爆弾の数 */
+    readonly bomb: number;
 }
 //#endregion
 
@@ -27,6 +29,7 @@ const MINE_SCORE_KEYS: (keyof MineScore)[] = [
     'solved',
     'remained',
     'total',
+    'bomb',
 ];
 
 export class ScoreManager
@@ -35,19 +38,25 @@ export class ScoreManager
 {
     /** 盤面のマス数 */
     #total: number = 0;
+    /** 爆弾の数 */
+    #bomb: number = 0;
     /** 爆弾だと確定しているマス数 */
     #flagged: number = 0;
     /** 開封済み、または周辺の開封によりタッチされたマス数 */
     #estimated: number = 0;
 
-    public constructor(total: number) {
+    public constructor(total: number, bomb: number) {
         super();
         this.#total = total;
+        this.#bomb = bomb;
     }
 
     /** 盤面のマス数 */
     public get total(): number {
         return this.#total;
+    }
+    public get bomb(): number {
+        return this.#bomb;
     }
     /** 爆弾だと確定しているマス数 */
     public get flagged(): number {
@@ -98,11 +107,14 @@ export class ScoreManager
      * @param total 合計のマス数
      * @returns このインスタンスそのもの
      */
-    public reset(total: number): this {
+    public reset(total: number, bomb: number): this {
         __assertIsInteger(total);
+        __assertIsInteger(bomb);
         __assertBetween(total, 0);
+        __assertBetween(bomb, 0, total);
 
         this.#total = total;
+        this.#bomb = bomb;
         this.#flagged = 0;
         this.#estimated = 0;
         this.emit('score-changed', this, MINE_SCORE_KEYS);

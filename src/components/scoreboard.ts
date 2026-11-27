@@ -19,6 +19,7 @@ const LABELS: Record<keyof MineScore, string> = {
     remained: 'Remained',
     solved: 'Solved',
     total: 'Total',
+    bomb: 'Bomb',
 };
 
 const SCOREBOARD_BASE_CLASS = formatClass(SCOREBOARD_PREFIX, 'base');
