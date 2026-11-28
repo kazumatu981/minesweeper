@@ -45,10 +45,10 @@ export class ScoreManager
     /** 開封済み、または周辺の開封によりタッチされたマス数 */
     #estimated: number = 0;
 
-    public constructor(total: number, bomb: number) {
+    public constructor(total?: number, bomb?: number) {
         super();
-        this.#total = total;
-        this.#bomb = bomb;
+        this.#total = total ?? 0;
+        this.#bomb = bomb ?? 0;
     }
 
     /** 盤面のマス数 */
